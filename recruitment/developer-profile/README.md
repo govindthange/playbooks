@@ -19,10 +19,10 @@ Prepare an easy to solve MCQ test to assess following areas of the candidate's k
 - **Assess Coding Capabilities:** Add MCQs to examine...
   - Basic coding principles, such as DRY and SOLID. Understanding of these principles suggests that the candidate has worked under good supervision.
   - Understanding of the chosen programming languages, such as Java, C#, JavaScript/HTML/CSS, PL/SQL, C/C++, Go, Python, Shell Scripting, etc.
-  - Understanding basic code snippets.
+  - Understanding of basic code snippets.
   - Use of the basic programming constructs such as exception handling, logging, interfaces etc.
 - **Assess Collaboration Capabilities:** Add MCQs to examine...
-  - Basic SVN/GIT commands to create commit, pull, fetch, checkout etc.
+  - Basic SVN/GIT commands to navigate repository tree and create commit, pull, fetch, checkout etc.
   - Creating builds and deployments.
 
 ### ✨ Test for **5+ Years** experienced candidates
@@ -31,8 +31,8 @@ Prepare a medium-level MCQ test to gauge the candidate's knowledge in following 
 
 - **Assess Code Review Capabilities:** Add MCQs to examine understanding of coding principles, such as DRY, SOLID, KISS, SOC, YAGNI, MVP, IoC. This knowledge is essential for doing proper code reviews.
 - **Assess Coding Capabilities:** Add MCQs to examine proper understanding of the chosen programming languages, such as Java, C#, JavaScript/HTML/CSS, PL/SQL, C/C++, Go, Python, Shell Scripting, etc.
-- **Assess Data Modeling Capabilities:** Add MCQs to examine database modeling w/ ER Diagrams.
-- **Assess Module Design Capabilities:** Add MCQs to examine UML diagrams & flowchart notations.
+- **Assess Data Modeling Capabilities:** Add MCQs to examine database modeling skills w/ ER Diagrams.
+- **Assess Module Design Capabilities:** Add MCQs to examine knowledge of UML diagrams & flowchart notations.
 - **Assess Bare Minimum DevOps Capabilities:** Add MCQs to examine...
   - Advanced SVN/GIT commands to do fork, tag, branch, rebase, commit w/ patch, cherry-pick etc.
   - Build & deployment tools.
@@ -44,8 +44,8 @@ Create a medium-level MCQ test to assess candidate's knowledge of the following 
 - **Assess Code Review Capabilities:** Add MCQs to examine...
   - Coding principles, such as DRY, SOLID, KISS, SOC, YAGNI, MVP, IoC. This knowledge is essential for doing proper code reviews.
   - Data security & encryption.
-- **Assess Data Modeling Capabilities:** Add MCQs to examine database modeling w/ ER Diagrams.
-- **Assess Module Design Capabilities:** Add MCQs to examine UML diagrams & flowchart notations.
+- **Assess Data Modeling Capabilities:** Add MCQs to examine database modeling skills w/ ER Diagrams.
+- **Assess Module Design Capabilities:** Add MCQs to examine knowledge of UML diagrams & flowchart notations.
 - **Assess System Design Capabilities:** Add MCQs to examine...
   - Design patterns.
   - Basic understanding of REST APIs, XML over HTTP, Messaging.
