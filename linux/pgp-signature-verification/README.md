@@ -37,3 +37,7 @@ gpg: WARNING: This key is not certified with a trusted signature!
 gpg:          There is no indication that the signature belongs to the owner.
 Primary key fingerprint: 5069 A233 D55A 0EEB 174A  5FC3 821A CD02 680D 16DE
 ```
+
+## Step 5. Match the RSA key with the fingerprint obtained in Step 2.
+
+We can verify that the fingerprint obtained in Step 2 matches the RSA key displayed in the Step 4 logs.
