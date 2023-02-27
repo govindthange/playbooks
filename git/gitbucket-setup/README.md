@@ -101,3 +101,9 @@ CONTAINER ID   IMAGE                 COMMAND                  CREATED          S
 5c11050c743f   gitbucket/gitbucket   "sh -c 'java -jar /o…"   18 seconds ago   Up 16 seconds   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 29418/tcp   infallible_swirles
 govind@thinkpad:~$ 
 ```
+
+# Step 5. Test GitBucket on browser
+
+#### Open http://192.9.200.97:8080/ on browser.
+
+login with `root` | `root` credentials.
