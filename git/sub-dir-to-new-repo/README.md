@@ -146,11 +146,26 @@ govind@thinkpad:~/de-chess$ git branch -a
   remotes/origin/main
 ```
 
-### Step 7.3. Make local branch 'master' to track the remote branch 'main'.
+### Step 7.3. Make local branch 'master' to track the remote branch 'main' (__OPTIONAL!__)
 
 ```
 govind@thinkpad:~/de-chess$ git branch --set-upstream-to=remotes/origin/main master
 Branch 'master' set up to track remote branch 'main' from 'origin'.
+```
+
+> If you hit below error saying `remotes/origin/main does not exist` then skip this step now and do it towards the end.
+
+```
+govind@thinkpad:~/temp/ml-gallery$ git branch --set-upstream-to=remotes/origin/main master
+error: the requested upstream branch 'remotes/origin/main' does not exist
+hint: 
+hint: If you are planning on basing your work on an upstream
+hint: branch that already exists at the remote, you may need to
+hint: run "git fetch" to retrieve it.
+hint: 
+hint: If you are planning to push out a new local branch that
+hint: will track its remote counterpart, you may want to use
+hint: "git push -u" to set the upstream config as you push.
 ```
 
 ### Step 7.4. Pull updates from the new remote repository.
@@ -190,5 +205,15 @@ Total 286 (delta 120), reused 245 (delta 110)
 remote: Resolving deltas: 100% (120/120), done.
 To https://github.com/govindthange/de-chess.git
    37a2d0f..16773c5  HEAD -> main
+Branch 'master' set up to track remote branch 'main' from 'origin'.
+```
+
+### Step 7.6. Make local branch 'master' to track the remote branch 'main' (_If not done before!_)
+
+> Do this step ONLY IF you hit error doing this earlier.
+
+```
+govind@thinkpad:~/temp/ml-gallery$ git fetch
+govind@thinkpad:~/temp/ml-gallery$  git branch --set-upstream-to=remotes/origin/main master
 Branch 'master' set up to track remote branch 'main' from 'origin'.
 ```
