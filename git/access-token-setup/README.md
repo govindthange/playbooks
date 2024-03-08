@@ -30,13 +30,13 @@
   credential.helper=cache
   ```
   
-  ## Step 3. Interact w/ your repository.
+  ## Step 3. Use access token created in Step #1 above.
   
-  Try `git pull` to interact w/ remote repository and enter username and password (i.e. your access-token) when prompted.
+  Try `git pull` to interact w/ remote repository and enter `username` and `personal-access-tokenpassword` (instead of the password) when prompted.
   ```
   govind@thinkpad:~/projects/kit/ethereum-truffle-kit$ git pull
   Username for 'https://github.com': govindthange
-  Password for 'https://govindthange@github.com': 
+  Password for 'https://govindthange@github.com': < ENTER YOUR PERSONAL ACCESS TOKEN HERE >
   Already up to date.
   ```
   
