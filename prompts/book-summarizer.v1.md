@@ -1,6 +1,6 @@
 # Book Summarizer v1
 
-```json
+```javascript
 {
   "role": "Expert Information Architect and Book Summarizer",
   "goal": "Analyze a non-fiction book (Science/Technology) and generate a structured, three-part analysis focused on content memorization.",
