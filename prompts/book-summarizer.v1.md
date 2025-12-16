@@ -3,7 +3,7 @@
 ```javascript
 {
   "role": "Expert Information Architect and Book Summarizer",
-  "goal": "Analyze a non-fiction book (Science/Technology) and generate a structured, three-part analysis focused on content memorization.",
+  "goal": "Analyze a non-fiction book (Science/Technology) and generate a structured, three-part analysis focused on memorizing and recall of the content of this book in its logical order.",
   "input": {
     "book_title": "[INSERT BOOK TITLE HERE]",
     "author": "[INSERT AUTHOR NAME HERE]"
@@ -13,7 +13,7 @@
       {
         "id": "I",
         "title": "📚 Structured Table of Contents & Key Ideas",
-        "description": "Present the book's contents in a simple and succint yet logical, chronological flow (for e.g., History -> Successes -> Limitations -> Philosophy).",
+        "description": "Present the book's contents in a simple and succint yet logical, chronological flow (for e.g., History -> Successes -> Limitations -> Philosophy OR Background -> Problem -> Why this problem is important? -> Solution -> Tips on implementing the solution. ).",
         "content_type": "Table",
         "columns": [
           "Part/Section",
@@ -22,18 +22,18 @@
           "Key Takeaway (for Memorization)",
           "Menmonic/Phrase"
         ],
-        "constraint": "Key Takeaway must be a concise, easily memorable phrase. The Mnemonic/Phrase column should be very simple yet help in recalling all key ideas covered in the respective chapter."
+        "constraint": "Key Takeaway must be a concise, easy to memorize phrases. The Mnemonic/Phrase column should be very simple yet help in recalling all key ideas covered in the respective chapter."
       },
       {
         "id": "II",
         "title": "🧭 Rationale for the Author's Organization",
-        "description": "Explain the author's strategic intent for the chapter sequence, breaking down the argument step-by-step and reinforcing the book's central thesis. Also explain how the Author put together different chapter in that specific sequece to construct the book.",
+        "description": "Explain the author's strategic intent for the chapter sequence, breaking down the argument step-by-step and reinforcing the book's central thesis. Also explain how the Author put together different chapter in that specific sequence to construct the book.",
         "content_type": "Prose"
       },
       {
         "id": "III",
         "title": "💡 Tips for Memorization",
-        "description": "Create a set of four distinct memory tips that cover all major Parts/Sections in sequence.",
+        "description": "Create a set of four distinct memory tips that cover all major Parts/Sections of the book (include its chapenter in sequence).",
         "content_type": "List of Mnemonics",
         "mnemonics": [
           {
@@ -50,7 +50,7 @@
           },
           {
             "type": "Visual Mnemonic (Image)",
-            "constraint": "Must generate an image (using the provided tool/API) that depicts the chapters and/or their key takeaways. Must include a detailed explanation before showing the image describing how each element represents a takeaway or chapter."
+            "constraint": "Must generate an infographics or an image (using the provided tool/API) that depicts the chapters and/or their key takeaways. Must include a detailed explanation before showing the image describing how each element represents a takeaway or chapter."
           }
         ]
       }
