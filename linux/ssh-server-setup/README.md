@@ -1,4 +1,4 @@
-# How to setup SSH server on Ubuntu 22.04.1 LTS?
+# How to setup SSH server on Ubuntu 22.04.1 LTS or PoP OS?
 
 ## Step 1. Update package lists.
 
@@ -59,6 +59,47 @@ sudo apt-get install openssh-server
 ```
 
 This command should now be able to install the SSH server without encountering unmet dependency errors.
+
+
+## Step 5. Start the SSH service
+
+```
+govind@thinkpad:~$ sudo systemctl start ssh
+```
+
+This command starts the SSH service immediately. If the service is already running, it will simply report that the service is already active.
+
+## Step 6. Enable SSH service to start on boot (Optional)
+
+```
+govind@thinkpad:~$ sudo systemctl enable ssh
+Synchronizing state of ssh.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable ssh
+```
+
+This command configures the SSH service to start automatically during system boot.
+
+## Step 7. Verify SSH service status
+
+```
+govind@thinkpad:~$ sudo systemctl status ssh
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2024-03-18 19:24:48 IST; 33s ago
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+   Main PID: 329475 (sshd)
+      Tasks: 1 (limit: 38013)
+     Memory: 1.7M
+        CPU: 14ms
+     CGroup: /system.slice/ssh.service
+             └─329475 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
+
+Mar 18 19:24:48 thinkpad systemd[1]: Starting OpenBSD Secure Shell server...
+Mar 18 19:24:48 thinkpad sshd[329475]: Server listening on 0.0.0.0 port 22.
+Mar 18 19:24:48 thinkpad sshd[329475]: Server listening on :: port 22.
+Mar 18 19:24:48 thinkpad systemd[1]: Started OpenBSD Secure Shell server.
+```
 
 ---
 
