@@ -28,7 +28,7 @@ a819979c05a6
 ## Step 3. Stop containers and remove images.
 
 ```bash
-docker stop $(docker ps -aq) && docker rm $(docker ps -aq) && docker rmi -f $(docker images -a -q)
+docker ps -aq | xargs -r docker stop && docker ps -aq | xargs -r docker rm && docker images -aq | xargs -r docker rmi -f
 ```
 
 ## Step 4. Verify container and image count.
