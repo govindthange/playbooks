@@ -40,5 +40,5 @@ ssh-keygen -t ed25519 -C "gthange@yahoo.com"
 Change your repo from HTTPS to SSH like so:
 
 ```console
-git remote set-url origin git@github.com:govindthange/kit.git`
+git remote set-url origin git@github.com:govindthange/[NAME-OF-YOUR-REPO].git`
 ```
