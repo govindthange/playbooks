@@ -83,3 +83,19 @@ Here's how to use various combinations of the above filters:
 | **With specific words but excluding others** | `report AND received:last month NOT draft` | Finds emails with "report" received last month, but excludes any that also have the word "draft." |
 | **Subject from a sender, but not another**| `subject:"Quarterly Report" AND from:finance@example.com -from:john@example.com` | Finds quarterly reports from the finance department, but excludes those from "john." |
 | **Find unread emails from a specific person** | `from:sarah AND is:unread` | Finds all unread emails from "sarah." |
+
+---
+
+# Examples
+
+#### Example: Searching for a particular project deployed at a particular bank but not from a specific individual.
+
+```
+(NOT from:gauri) AND (category:asba OR category:ipo) AND category:AB
+```
+
+#### Example: Searching for a set of projects, from a particular bank but not from specific individual.
+
+```
+(category:apy OR category:pm OR category:logistics OR category:cba) AND category:AB
+```
