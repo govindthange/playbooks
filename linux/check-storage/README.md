@@ -1,3 +1,55 @@
+# How to check a specific folder has enough storage in it?
+
+If you are in a folder and want to be 100% sure how much space it has before you copy that large file, use:
+
+```bash
+df -h .
+```
+
+The `.` tells `df` to report on the current directory.
+
+```bash
+govind@thinkpad:~$ df -h .
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p3  460G  421G   16G  97% /
+```
+
+To see the relationship between your physical disks and your folders is the `lsblk` command. It shows exactly which partition is "hooked" into which folder.
+
+```bash
+lsblk
+```
+
+In your specific case, any folder listed in the **MOUNTPOINTS** column is a "gate" to a different partition.
+
+```bash
+govind@thinkpad:~$ lsblk
+NAME          MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+loop0           7:0    0  55.5M  1 loop  /snap/core18/2979
+loop1           7:1    0  55.5M  1 loop  /snap/core18/2999
+loop2           7:2    0    74M  1 loop  /snap/core22/2339
+loop3           7:3    0    74M  1 loop  /snap/core22/2411
+loop4           7:4    0   173M  1 loop  /snap/postman/248
+loop5           7:5    0   173M  1 loop  /snap/postman/254
+loop6           7:6    0   1.2G  1 loop  /snap/pycharm-community/592
+loop7           7:7    0   1.2G  1 loop  /snap/pycharm-community/594
+loop8           7:8    0  49.3M  1 loop  /snap/snapd/26865
+loop9           7:9    0  48.4M  1 loop  /snap/snapd/26382
+zram0         251:0    0    16G  0 disk  [SWAP]
+nvme0n1       259:0    0 476.9G  0 disk  
+├─nvme0n1p1   259:1    0  1022M  0 part  /boot/efi
+├─nvme0n1p2   259:2    0     4G  0 part  /recovery
+├─nvme0n1p3   259:3    0 467.9G  0 part  /
+└─nvme0n1p4   259:4    0     4G  0 part  
+  └─cryptswap 252:0    0     4G  0 crypt [SWAP]
+```
+
+Based on your `df` output:
+* **`/`** is your main partition (`/dev/nvme0n1p3`).
+* **`/recovery`** is a different partition.
+* **`/boot/efi`** is a different partition.
+* **Anything else** (like `/home`, `/etc`, `/opt`, or `/usr`) is physically located on your **`/`** partition.
+
 # How to check disk space usage on linux based systems?
 
 Get information about the disk space usage on the system, including the file system name, total size, used space, available space, and mount point.
