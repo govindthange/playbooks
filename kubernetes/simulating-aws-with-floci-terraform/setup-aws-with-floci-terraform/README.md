@@ -1,8 +1,6 @@
-This optimized configuration bundles the entire environment into two independent Docker Compose stacks and one master automation script (setup.sh).
+# 🚀 The AWS & Kubernetes Integration Blueprint
 
-The Terraform Provisioner remains completely isolated inside its own separate Docker Compose file. This allows you to orchestrate the core infrastructure platforms seamlessly, while triggering, modifying, or scaling your Terraform infrastructure declaratively at will, without ever restarting the underlying cloud or Kubernetes services.
 
-## 🚀 The Master AWS & KinD Integration Blueprint
 
 ### 📂 Unified Folder Structure
 
@@ -24,11 +22,16 @@ local-cloud-env/
 └── teardown.sh                  # Wipes the sandbox environment completely
 ```
 
-## 💾 1. The Core Infrastructure Configurations
+# ⚙️ The Core Infrastructure Configurations
+
+This optimized configuration bundles the entire environment into two independent Docker Compose stacks and multiple scripts for automating environment setup and tests.
 
 ### 📄 backend-infra/docker-compose.yml (Stack 1)
 
-This file defines the core Floci Cloud Engine and pre-configures a shared bridge network (local-aws-net) so that all future KinD nodes and Terraform containers can intercommunicate.
+This file defines the **Stack 1** like so:
+1. Defines the core **Floci Cloud Engine**
+2. Pre-configures a **shared bridge network** (local-aws-net) so that all future **KinD nodes** and **Terraform containers** can intercommunicate.
+3. Defines the **AWS Web Console** via floci-ui
 
 ```yml
 
@@ -100,7 +103,12 @@ nodes:
 
 ```
 
+> Not all of these tools can be further dockerized. While you can run the aws-cli or kubectl inside containers, KinD (Kubernetes in Docker) strictly requires a native CLI installation on your host system. KinD functions by directly controlling your host's Docker daemon to spawn complex, multi-container system networks. Running KinD inside a container requires privileged, nested "Docker-in-Docker" configurations that break the external networking loop we created to let other developers connect to your machine.
+
 ### 📄 terraform-provisioner/docker-compose.yml (Stack 2)
+
+The Terraform Provisioner remains completely isolated inside its own separate Docker Compose file. This allows you to orchestrate the core infrastructure platforms seamlessly, while triggering, modifying, or scaling your Terraform infrastructure declaratively at will, without ever restarting the underlying cloud or Kubernetes services.
+
 
 This standalone container mounts your local .tf configuration workspace, hooks into the shared bridge network, applies your architecture, and immediately terminates upon success.
 
@@ -213,9 +221,9 @@ resource "aws_instance" "local_compute" {
 
 ```
 
-### ⚙️ The Unified Lifecycle Scripts
+# ⚙️ The Unified Lifecycle Scripts
 
-#### 📄 setup-prerequisites.sh
+### 📄 setup-prerequisites.sh
 
 ```bash
 #!/bin/bash
@@ -282,7 +290,24 @@ echo "🎉 Prerequisites successfully configured! You can now execute ./setup.sh
 
 ```
 
-#### 📄 setup.sh
+You need the following three core tools installed natively on your host machine:
+
+1. **Docker Desktop** (or Docker Engine on Linux) — Must be running before starting.
+2. **KinD CLI** — To orchestrate the multi-node Kubernetes container matrix.
+3. **kubectl CLI** — The administrative console tool to interact with your cluster. [A, B, C, D] 
+
+> Note: You DO NOT need to install the **AWS CLI** or **Terraform** on your host, as our setup isolates them cleanly **inside Stack 2's Docker container**. [E, F] 
+
+
+- [A] [https://docs.inkeep.com](https://docs.inkeep.com/get-started/quick-start)
+- [B] [https://documentation.mindsphere.io](https://documentation.mindsphere.io/MindSphere/apps/dashboard-designer-v10/auto-refresh-session.html)
+- [C] [https://r4ven.me](https://r4ven.me/en/storage/podnimaem-server-sinhronizacii-fajlov-syncthing-v-docker/)
+- [D] [https://www.datasunrise.com](https://www.datasunrise.com/professional-info/running-ds-on-kubernetes/)
+- [E] [https://www.virtualizationhowto.com](https://www.virtualizationhowto.com/2018/05/basic-terraform-installation-and-vmware-vsphere-automation/)
+- [F] [https://exampledriven.wordpress.com](https://exampledriven.wordpress.com/2017/01/09/spring-boot-aws-elastic-beanstalk-example/)
+
+
+### 📄 setup.sh
 
 This master orchestrator weaves all isolated commands into a single sequence. It launches Stack 1, spins up your multi-node KinD cluster, links the container network switches, configures the NGINX Ingress system, and waits for your confirmation.
 
@@ -317,7 +342,8 @@ echo "✨ Base Environment is operational! Run Stack 2 to apply your infrastruct
 
 ```
 
-#### 📄 verify-tests.sh
+### 📄 verify-tests.sh
+
 This script isolates the AWS CLI entirely inside an ephemeral container. Your host machine remains clean, but you can thoroughly verify all 6 services [index: 4].
 
 ```bash
@@ -356,131 +382,88 @@ Make `./verify-tests.sh` executable:
 chmod +x verify-tests.sh
 ```
 
-#### 📄 teardown.sh
+### 📄 teardown.sh
+
+This script uses your isolated Terraform Compose configuration to tear down the cloud resources, destroys the KinD cluster, halts the background emulator, and cleans up any dynamic container sidecars.
 
 ```bash
 #!/bin/bash
-echo "⚠️ Destroying AWS Cloud Resources via Terraform State Framework..."
-cd terraform-provisioner && docker compose run --rm terraform /bin/sh -c "terraform destroy -auto-approve" && cd ..
+echo "⚠️ Commencing complete environment teardown..."
 
-echo "⚠️ Deleting KinD Cluster..."
+echo "🛑 Destroying declarative Terraform managed resources (Stack 2)..."
+cd terraform-provisioner
+docker compose run --rm terraform /bin/sh -c "terraform destroy -auto-approve" || true
+cd ..
+
+echo "🛑 Deleting the KinD Kubernetes cluster..."
 kind delete cluster --name local-eks || true
 
-echo "⚠️ Halting Floci Core Systems and Web UI Dashboard Channels..."
+echo "🛑 Halting Floci Core platform engines and associated volumes (Stack 1)..."
 cd backend-infra && docker compose down -v && cd ..
 
-echo "⚠️ Purging dynamic runtime container elements from system socket..."
+echo "🛑 Cleaning up orphaned runtime container processes from host engine socket..."
 docker ps -a --filter "name=floci-" -q | xargs -r docker rm -f || true
-echo "✨ Sandbox environment completely wiped."
+
+echo "✨ Teardown clean complete. Machine is completely reset."
 
 ```
 
-------------------------------
-### 🕹️ How to Execute and Interact
-
-1. Bootstrap dependencies and pull up the cluster:
+Make it executable and execute it whenever you need a fresh slate:
 
 ```bash
+chmod +x teardown.sh
+./teardown.sh
+```
+
+# 🕹️ How to execute and interact with the setup?
+
+Your complete initialization workflow is now simplified into two consecutive script steps:
+
+## Step 1. Bootstrap dependencies and pull up the cluster:
+
+```bash
+# Step 1: Grant permissions to setup-prerequisites.sh, setup.sh and teardown.sh
 chmod +x *.sh
+
+# Step 2: Pull down your host prerequisites
 ./setup-prerequisites.sh
+
+# Step 3: Fire up your integrated local AWS and KinD environment
 ./setup.sh
 
 ```
 
-2. Apply your infrastructure via Stack 2:
+## Step 2. Apply your infrastructure via Stack 2:
+
+Once the base system finishes initializing in Step #1 above, execute **Stack 2** to let the isolated Terraform engine provision your resources seamlessly:
 
 ```bash
 cd terraform-provisioner && docker compose up && cd ..
 ```
 
-3. Open the Web UI Management Console:
+## Step 3. Open the Web UI Management Console:
 
-Open your browser and navigate to `http://localhost:8080`. You can visually view your active S3 buckets, select the file browser workspace, drag and drop documents into your bucket pipelines, and verify data flows interactively. Other developers on your network can access this identical console by hitting `http://<your-machine-ip>:8080`.
+Once you execute `./setup.sh` and deploy your infrastructure via Terraform, you can open floci dashboard like so:
+
+1. Open your browser and navigate to `http://localhost:8080`.
+2. You will be greeted by an admin control room showing your live application-assets S3 bucket, your local-mongo-cluster DocumentDB data layers, and your cryptographic KMS tracking keys.
+3. You can visually view your active S3 buckets, select the file browser workspace, drag and drop documents into your bucket pipelines, and verify data flows interactively.
+
+Even better—because it is bound to port 8080 on your machine, other developers on your network can access this identical console by hitting `http://<your-machine-ip>:8080`.
 
 - [1] [https://github.com](https://github.com/floci-io/floci-ui)
 - [2] [https://github.com](https://github.com/floci-io/floci/issues/1517)
 
-4. Run the isolated API tests:
-
-```bash
-./verify-tests.sh
-
-```
-
-5. Reset the workspace whenever necessary:
-
-```bash
-./teardown.sh
-
-```
-
-## ⚙️ 2. The Master Automation Setup Script
-
-To run the **setup.sh** script successfully, your host system needs a few essential binaries.
-
-Not all of these tools can be further dockerized. While you can run the aws-cli or kubectl inside containers, KinD (Kubernetes in Docker) strictly requires a native CLI installation on your host system. KinD functions by directly controlling your host's Docker daemon to spawn complex, multi-container system networks. Running KinD inside a container requires privileged, nested "Docker-in-Docker" configurations that break the external networking loop we created to let other developers connect to your machine.
-
-Therefore, the best engineering practice is to keep these tools on the host. Below are the prerequisites and an automated script to install them.
-
-### 📋 Host System Pre-requisites
-
-You need the following three core tools installed natively on your host machine:
-
-1. **Docker Desktop** (or Docker Engine on Linux) — Must be running before starting.
-2. **KinD CLI** — To orchestrate the multi-node Kubernetes container matrix.
-3. **kubectl CLI** — The administrative console tool to interact with your cluster. [A, B, C, D] 
-
-> Note: You DO NOT need to install the **AWS CLI** or **Terraform** on your host, as our setup isolates them cleanly **inside Stack 2's Docker container**. [E, F] 
-
-- [A] [https://docs.inkeep.com](https://docs.inkeep.com/get-started/quick-start)
-- [B] [https://documentation.mindsphere.io](https://documentation.mindsphere.io/MindSphere/apps/dashboard-designer-v10/auto-refresh-session.html)
-- [C] [https://r4ven.me](https://r4ven.me/en/storage/podnimaem-server-sinhronizacii-fajlov-syncthing-v-docker/)
-- [D] [https://www.datasunrise.com](https://www.datasunrise.com/professional-info/running-ds-on-kubernetes/)
-- [E] [https://www.virtualizationhowto.com](https://www.virtualizationhowto.com/2018/05/basic-terraform-installation-and-vmware-vsphere-automation/)
-- [F] [https://exampledriven.wordpress.com](https://exampledriven.wordpress.com/2017/01/09/spring-boot-aws-elastic-beanstalk-example/)
-
-
-Your complete initialization workflow is now simplified into two consecutive script steps:
-
-```bash
-# Step 1: Grant permissions and pull down your host prerequisites
-chmod +x setup-prerequisites.sh setup.sh teardown.sh
-./setup-prerequisites.sh
-
-```
-
-Make `setup.sh` executable and launch it:
-
-```bash
-# Step 2: Fire up your integrated local AWS and KinD environment
-chmod +x setup.sh
-./setup.sh
-```
-
-Once the base system finishes initializing, execute **Stack 2** to let the isolated Terraform engine provision your resources seamlessly:
-
-```bash
-cd terraform-provisioner && docker compose up && cd ..
-```
-
-### Use floci-dashboard
-Once you execute `./setup.sh` and deploy your infrastructure via Terraform, you can open your web browser and navigate to http://localhost:8080.
-
-- You will be greeted by an admin control room showing your live application-assets S3 bucket, your local-mongo-cluster DocumentDB data layers, and your cryptographic KMS tracking keys.
-- Even better—because it is bound to port 8080 on your machine, other developers on your network can also open `http://<your-machine-ip>:8080` to visually inspect the resources you are simulating for the team.
-
-
-## 🧪 3. Complete AWS Service Testing Guide
-
-### 🧪 Running Isolated AWS CLI Verification Tests via Docker
+## Step 4. Run the isolated API tests via Docker
 
 Run `./verify-tests.sh` at any time to instantly test all 6 services with zero clutter on your local machine.
 
 ```bash
 ./verify-tests.sh
+
 ```
 
-### 🧪 Running AWS CLI Verification Tests inside Host
+## Step 5. Running AWS CLI Verification Tests inside Host
 
 To verify each of the 6 simulated services, run these test commands from your host machine terminal.
 
@@ -537,39 +520,10 @@ Inspect your EC2 instances to verify that the proxy virtual machine container is
 aws ec2 describe-instances --filters "Name=tag:Name,Values=LocalComputeNode"
 ```
 
-## 🧹 4. Complete Automated Cleanup Framework
-
-### teardown.sh
-This script uses your isolated Terraform Compose configuration to tear down the cloud resources, destroys the KinD cluster, halts the background emulator, and cleans up any dynamic container sidecars.
+## Step 6. Reset the workspace whenever necessary:
 
 ```bash
-#!/bin/bash
-echo "⚠️ Commencing complete environment teardown..."
-
-echo "🛑 Destroying declarative Terraform managed resources (Stack 2)..."
-cd terraform-provisioner
-docker compose run --rm terraform /bin/sh -c "terraform destroy -auto-approve" || true
-cd ..
-
-echo "🛑 Obliterating the KinD Kubernetes cluster..."
-kind delete cluster --name local-eks || true
-
-echo "🛑 Halting Floci Core platform engines and associated volumes (Stack 1)..."
-cd backend-infra && docker compose down -v && cd ..
-
-echo "🛑 Cleaning up orphaned runtime container processes from host engine socket..."
-docker ps -a --filter "name=floci-" -q | xargs -r docker rm -f || true
-
-echo "✨ Teardown clean complete. Machine is completely reset."
-
-```
-
-Make it executable and execute it whenever you need a fresh slate:
-
-```bash
-chmod +x teardown.sh
 ./teardown.sh
-```
 
-Would you like to explore how to bundle a Kubernetes testing deployment into the setup.sh script to verify that inner pods can resolve these local AWS resources automatically upon boot?
+```
 
