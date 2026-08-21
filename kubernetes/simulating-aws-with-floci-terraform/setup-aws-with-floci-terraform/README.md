@@ -225,45 +225,95 @@ echo "🔍 Detecting Host Operating System..."
 OS_TYPE="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH_TYPE="$(uname -m)"
 
-if [ "$ARCH_TYPE" = "x86_64" ]; then ARCH="amd64"
-elif [ "$ARCH_TYPE" = "aarch64" ] || [ "$ARCH_TYPE" = "arm64" ]; then ARCH="arm64"
-else echo "❌ Unsupported architecture: $ARCH_TYPE"; exit 1; fi
-
-if [ "$OS_TYPE" = "darwin" ]; then
-    if ! command -v brew &> /dev/null; then echo "❌ Error: Homebrew required."; exit 1; fi
-    brew install kind kubectl
-elif [ "$OS_TYPE" = "linux" ]; then
-    curl -Lo ./kind "https://k8s.io{ARCH}" && chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
-    curl -Lo ./kubectl "https://k8s.io(curl -L -s https://k8s.io)/bin/linux/${ARCH}/kubectl" && chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+# Normalize architecture strings for download URLs
+if [ "$ARCH_TYPE" = "x86_64" ]; then
+    ARCH="amd64"
+elif [ "$ARCH_TYPE" = "aarch64" ] || [ "$ARCH_TYPE" = "arm64" ]; then
+    ARCH="arm64"
 else
-    echo "❌ This setup script requires macOS or Linux." ; exit 1
+    echo "❌ Unsupported architecture: $ARCH_TYPE"
+    exit 1
 fi
-echo "🎉 Prerequisites successfully configured!"
+
+echo "💻 System Identified: $OS_TYPE ($ARCH)"
+
+# =========================================================================
+# MACOS INSTALLATION ROUTE (Using Homebrew)
+# =========================================================================
+if [ "$OS_TYPE" = "darwin" ]; then
+    echo "📦 Checking for Homebrew..."
+    if ! command -v brew &> /dev/null; then
+        echo "❌ Homebrew is not installed. Please install it first from https://brew.sh or install Docker Desktop manually."
+        exit 1
+    fi
+
+    echo "⚙️ Installing KinD and Kubectl via Homebrew..."
+    brew install kind kubectl
+    
+    echo "🐳 Note: Please ensure Docker Desktop for Mac is downloaded and running."
+
+# =========================================================================
+# LINUX INSTALLATION ROUTE (Native Binary Downloads)
+# =========================================================================
+elif [ "$OS_TYPE" = "linux" ]; then
+    echo "⚙️ Downloading and installing KinD binary..."
+    curl -Lo ./kind "https://k8s.io{ARCH}"
+    chmod +x ./kind
+    sudo mv ./kind /usr/local/bin/kind
+
+    echo "⚙️ Downloading and installing kubectl binary..."
+    curl -Lo ./kubectl "https://k8s.io(curl -L -s https://k8s.io)/bin/linux/${ARCH}/kubectl"
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
+
+    echo "🐳 Note: Ensure Docker Engine is installed and your user is part of the 'docker' group."
+else
+    echo "❌ This automation script only supports macOS and Linux. For Windows, please use 'choco install kind kubernetes-cli'."
+    exit 1
+fi
+
+# =========================================================================
+# VALIDATION RESOURCING
+# =========================================================================
+echo "🚀 Validating Tool Installations..."
+echo "✅ KinD Version: $(kind version)"
+echo "✅ Kubectl Version: $(kubectl version --client --output=yaml | grep gitVersion)"
+echo "🎉 Prerequisites successfully configured! You can now execute ./setup.sh safely."
 
 ```
 
 #### 📄 setup.sh
 
+This master orchestrator weaves all isolated commands into a single sequence. It launches Stack 1, spins up your multi-node KinD cluster, links the container network switches, configures the NGINX Ingress system, and waits for your confirmation.
+
 ```bash
 #!/bin/bash
 set -e
 
-echo "🚀 Booting Core Infrastructure Layer (Stack 1)..."
+echo "🚀 Commencing unified environment orchestration..."
+
+echo "🔹 [1/4] Booting Core Platform Cloud Engine (Stack 1)..."
 cd backend-infra && docker compose up -d && cd ..
 
-echo "🚀 Constructing Multi-Node High-Fidelity KinD Cluster..."
+echo "🔹 [2/4] Constructing High-Fidelity KinD Cluster Matrix..."
 kind create cluster --name local-eks --config local-kubernetes/kind-config.yaml
 
-echo "🚀 Binding Containerized Cluster Routing Targets to AWS Network..."
+echo "🔹 [3/4] Blending Virtual Kubernetes Nodes into the Host AWS Virtual Switch..."
 docker network connect local-aws-net local-eks-control-plane
 docker network connect local-aws-net local-eks-worker
 docker network connect local-aws-net local-eks-worker2
 
-echo "🚀 Rollout NGINX Edge Ingress Platforms inside KinD..."
+echo "🔹 [4/4] Deploying NGINX Ingress Routing Platform inside KinD..."
 kubectl apply -f https://githubusercontent.com
-kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+# kubectl apply -f https://raw.githubusercontent.com
 
-echo "✨ Base Grid Setup online! Launch Stack 2 next to apply Terraform profiles."
+echo "⏳ Waiting for Ingress controller readiness parameters..."
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+
+echo "✨ Base Environment is operational! Run Stack 2 to apply your infrastructure blueprints."
 
 ```
 
@@ -298,6 +348,12 @@ run_aws eks describe-cluster --name micro-eks | grep -E "name|status"
 echo -e "\n👉 [6/6] Amazon EC2 Instance Mappings:"
 run_aws ec2 describe-instances --filters "Name=tag:Name,Values=LocalComputeNode" | grep -A 2 "Tags"
 
+```
+
+Make `./verify-tests.sh` executable:
+
+```bash
+chmod +x verify-tests.sh
 ```
 
 #### 📄 teardown.sh
@@ -384,109 +440,6 @@ You need the following three core tools installed natively on your host machine:
 - [F] [https://exampledriven.wordpress.com](https://exampledriven.wordpress.com/2017/01/09/spring-boot-aws-elastic-beanstalk-example/)
 
 
-### setup-prerequisites.sh
-
-This script automatically detects your operating system (macOS or Linux) and provisions the correct version of the required tools. [12, 13, 14] 
-
-```bash
-#!/bin/bash
-set -e
-
-echo "🔍 Detecting Host Operating System..."
-OS_TYPE="$(uname -s | tr '[:upper:]' '[:lower:]')"
-ARCH_TYPE="$(uname -m)"
-
-# Normalize architecture strings for download URLs
-if [ "$ARCH_TYPE" = "x86_64" ]; then
-    ARCH="amd64"
-elif [ "$ARCH_TYPE" = "aarch64" ] || [ "$ARCH_TYPE" = "arm64" ]; then
-    ARCH="arm64"
-else
-    echo "❌ Unsupported architecture: $ARCH_TYPE"
-    exit 1
-fi
-
-echo "💻 System Identified: $OS_TYPE ($ARCH)"
-
-# =========================================================================
-# MACOS INSTALLATION ROUTE (Using Homebrew)
-# =========================================================================
-if [ "$OS_TYPE" = "darwin" ]; then
-    echo "📦 Checking for Homebrew..."
-    if ! command -v brew &> /dev/null; then
-        echo "❌ Homebrew is not installed. Please install it first from https://brew.sh or install Docker Desktop manually."
-        exit 1
-    fi
-
-    echo "⚙️ Installing KinD and Kubectl via Homebrew..."
-    brew install kind kubectl
-    
-    echo "🐳 Note: Please ensure Docker Desktop for Mac is downloaded and running."
-
-# =========================================================================
-# LINUX INSTALLATION ROUTE (Native Binary Downloads)
-# =========================================================================
-elif [ "$OS_TYPE" = "linux" ]; then
-    echo "⚙️ Downloading and installing KinD binary..."
-    curl -Lo ./kind "https://k8s.io{ARCH}"
-    chmod +x ./kind
-    sudo mv ./kind /usr/local/bin/kind
-
-    echo "⚙️ Downloading and installing kubectl binary..."
-    curl -Lo ./kubectl "https://k8s.io(curl -L -s https://k8s.io)/bin/linux/${ARCH}/kubectl"
-    chmod +x ./kubectl
-    sudo mv ./kubectl /usr/local/bin/kubectl
-
-    echo "🐳 Note: Ensure Docker Engine is installed and your user is part of the 'docker' group."
-else
-    echo "❌ This automation script only supports macOS and Linux. For Windows, please use 'choco install kind kubernetes-cli'."
-    exit 1
-fi
-
-# =========================================================================
-# VALIDATION RESOURCING
-# =========================================================================
-echo "🚀 Validating Tool Installations..."
-echo "✅ KinD Version: $(kind version)"
-echo "✅ Kubectl Version: $(kubectl version --client --output=yaml | grep gitVersion)"
-echo "🎉 Prerequisites successfully configured! You can now execute ./setup.sh safely."
-
-```
-
-### setup.sh
-
-This master orchestrator weaves all isolated commands into a single sequence. It launches Stack 1, spins up your multi-node KinD cluster, links the container network switches, configures the NGINX Ingress system, and waits for your confirmation.
-
-```bash
-#!/bin/bash
-set -e
-
-echo "🚀 Commencing unified environment orchestration..."
-
-echo "🔹 [1/4] Booting Core Platform Cloud Engine (Stack 1)..."
-cd backend-infra && docker compose up -d && cd ..
-
-echo "🔹 [2/4] Constructing High-Fidelity KinD Cluster Matrix..."
-kind create cluster --name local-eks --config local-kubernetes/kind-config.yaml
-
-echo "🔹 [3/4] Blending Virtual Kubernetes Nodes into the Host AWS Virtual Switch..."
-docker network connect local-aws-net local-eks-control-plane
-docker network connect local-aws-net local-eks-worker
-docker network connect local-aws-net local-eks-worker2
-
-echo "🔹 [4/4] Deploying NGINX Ingress Routing Platform inside KinD..."
-kubectl apply -f https://githubusercontent.com
-
-echo "⏳ Waiting for Ingress controller readiness parameters..."
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-
-echo "✨ Base Environment is operational! Run Stack 2 to apply your infrastructure blueprints."
-
-```
-
 Your complete initialization workflow is now simplified into two consecutive script steps:
 
 ```bash
@@ -521,53 +474,11 @@ Once you execute `./setup.sh` and deploy your infrastructure via Terraform, you 
 
 ### 🧪 Running Isolated AWS CLI Verification Tests via Docker
 
-### verify-tests.sh
+Run `./verify-tests.sh` at any time to instantly test all 6 services with zero clutter on your local machine.
 
 ```bash
-#!/bin/bash
-# 📄 local-cloud-env/verify-tests.sh
-
-echo "🧪 Running Isolated AWS CLI Verification Tests via Docker..."
-
-# A reusable function that calls Amazon's official CLI image over the shared network
-run_aws() {
-  docker run --rm \
-    --network local-aws-net \
-    -e AWS_ACCESS_KEY_ID=mock-key \
-    -e AWS_SECRET_ACCESS_KEY=mock-secret \
-    -e AWS_DEFAULT_REGION=us-east-1 \
-    amazon/aws-cli \
-    --endpoint-url=http://floci-emulator:4566 "$@"
-}
-
-echo "👉 [1/6] DocumentDB (Amazon MongoDB):"
-run_aws docdb describe-db-clusters --db-cluster-identifier local-mongo-cluster | grep -E "DBClusterIdentifier|Status"
-
-echo -e "\n👉 [2/6] Amazon ElastiCache:"
-run_aws elasticache describe-cache-clusters --cache-cluster-id local-cache | grep -E "CacheClusterId|CacheClusterStatus"
-
-echo -e "\n👉 [3/6] Amazon S3 Storage:"
-run_aws s3 ls
-
-echo -e "\n👉 [4/6] AWS KMS Keys:"
-run_aws kms list-keys
-
-echo -e "\n👉 [5/6] Amazon EKS (Kubernetes Control Mapping):"
-run_aws eks describe-cluster --name micro-eks | grep -E "name|status"
-
-echo -e "\n👉 [6/6] Amazon EC2 Instance Mappings:"
-run_aws ec2 describe-instances --filters "Name=tag:Name,Values=LocalComputeNode" | grep -A 2 "Tags"
-
-```
-
-Make it executable:
-
-```bash
-chmod +x verify-tests.sh
 ./verify-tests.sh
 ```
-
-Run `./verify-tests.sh` at any time to instantly test all 6 services with zero clutter on your local machine.
 
 ### 🧪 Running AWS CLI Verification Tests inside Host
 
