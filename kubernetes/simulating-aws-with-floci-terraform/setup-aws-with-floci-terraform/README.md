@@ -34,9 +34,6 @@ This file defines the **Stack 1** like so:
 3. Defines the **AWS Web Console** via floci-ui
 
 ```yml
-
-version: '3.8'
-
 services:
   # --- Tier 1: Core API Cloud Engine ---
   floci:
@@ -61,7 +58,7 @@ services:
     image: floci/floci-ui:latest
     container_name: aws-local-web-console
     ports:
-      - "8080:8080" # 👈 Opens the dashboard port to your host network
+      - "4500:4500" # 👈 Opens the dashboard port to your host network
     environment:
       - FLOCI_ENDPOINT=http://floci-emulator:4566 # Direct container lookup
     networks:
@@ -113,15 +110,13 @@ The Terraform Provisioner remains completely isolated inside its own separate Do
 This standalone container mounts your local .tf configuration workspace, hooks into the shared bridge network, applies your architecture, and immediately terminates upon success.
 
 ```yml
-version: '3.8'
-
 networks:
   local-aws-net:
     external: true
 
 services:
   terraform:
-    image: hashicorp/terraform:1.6.0
+    image: hashicorp/terraform:1.6.2
     container_name: local-terraform-runner
     volumes:
       - .:/infra
