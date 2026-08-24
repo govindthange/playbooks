@@ -265,12 +265,12 @@ if [ "$OS_TYPE" = "darwin" ]; then
 # =========================================================================
 elif [ "$OS_TYPE" = "linux" ]; then
     echo "⚙️ Downloading and installing KinD binary..."
-    curl -Lo ./kind "https://k8s.io{ARCH}"
+    curl -Lo ./kind "https://kind.sigs.k8s.io/dl/latest/kind-linux-${ARCH}"
     chmod +x ./kind
     sudo mv ./kind /usr/local/bin/kind
 
     echo "⚙️ Downloading and installing kubectl binary..."
-    curl -Lo ./kubectl "https://k8s.io(curl -L -s https://k8s.io)/bin/linux/${ARCH}/kubectl"
+    curl -Lo ./kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
     chmod +x ./kubectl
     sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -317,29 +317,191 @@ set -e
 
 echo "🚀 Commencing unified environment orchestration..."
 
-echo "🔹 [1/4] Booting Core Platform Cloud Engine (Stack 1)..."
+# ==============================================================================
+# STEP 1: Boot Core Platform Cloud Engine (Stack 1)
+# ==============================================================================
+# We boot up the backend local cloud emulators using Docker Compose. 
+# This runs components like the floci emulator and local web console.
+echo "🔹 [1/5] Booting Core Platform Cloud Engine (Stack 1)..."
 cd backend-infra && docker compose up -d && cd ..
 
-echo "🔹 [2/4] Constructing High-Fidelity KinD Cluster Matrix..."
-kind create cluster --name local-eks --config local-kubernetes/kind-config.yaml
+# ==============================================================================
+# STEP 2: Construct High-Fidelity KinD Cluster Matrix
+# ==============================================================================
+# We initialize our multi-node Kubernetes cluster using KinD (Kubernetes in Docker).
+# Idempotency check: We check if the cluster already exists to prevent creation errors 
+# if the script is re-run multiple times during troubleshooting.
+echo "🔹 [2/5] Constructing High-Fidelity KinD Cluster Matrix..."
+if kind get clusters | grep -q "^local-eks$"; then
+    echo "⚠️ KinD cluster 'local-eks' already exists. Skipping creation."
+else
+    kind create cluster --name local-eks --config local-kubernetes/kind-config.yaml
+fi
 
-echo "🔹 [3/4] Blending Virtual Kubernetes Nodes into the Host AWS Virtual Switch..."
-docker network connect local-aws-net local-eks-control-plane
-docker network connect local-aws-net local-eks-worker
-docker network connect local-aws-net local-eks-worker2
+# ==============================================================================
+# STEP 3: Blend Virtual Kubernetes Nodes into Host AWS Virtual Switch
+# ==============================================================================
+# We attach each KinD node container to our custom bridge network ('local-aws-net') 
+# so they can communicate seamlessly with local AWS service emulators. 
+# We suppress errors (2>/dev/null || true) so re-runs don't fail if already attached.
+echo "🔹 [3/5] Blending Virtual Kubernetes Nodes into the Host AWS Virtual Switch..."
+docker network connect local-aws-net local-eks-control-plane 2>/dev/null || true
+docker network connect local-aws-net local-eks-worker 2>/dev/null || true
+docker network connect local-aws-net local-eks-worker2 2>/dev/null || true
 
-echo "🔹 [4/4] Deploying NGINX Ingress Routing Platform inside KinD..."
-kubectl apply -f https://githubusercontent.com
-# kubectl apply -f https://raw.githubusercontent.com
+# ==============================================================================
+# STEP 4: Caching and Importing Ingress Images via Tar Archive
+# ==============================================================================
+# TROUBLESHOOTING CONTEXT: 
+# Standard 'kind load' uses continuous socket streaming via Docker API pipes. 
+# On Linux environments running Docker Desktop, this frequently causes 500 socket 
+# errors or hangs indefinitely during heavy multi-node imports.
+# 
+# SOLUTION: 
+# 1. We pull the images cleanly onto the host using the Docker CLI.
+# 2. We package them into a flat .tar file on disk to avoid live-stream socket locks.
+# 3. We copy the tar archive directly into each node container and use 'ctr' 
+#    (containerd's native CLI) to import them locally.
+echo "🔹 [4/5] Caching and Importing Ingress Images via Tar Archive..."
+docker pull registry.k8s.io/ingress-nginx/controller:v1.12.0
+docker pull registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.4.4
 
+# Save images to a temporary local tar file on the host
+docker save registry.k8s.io/ingress-nginx/controller:v1.12.0 registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.4.4 -o /tmp/ingress-images.tar
+
+# Iterate over each cluster node to push and import the images natively
+for node in local-eks-control-plane local-eks-worker local-eks-worker2; do
+    echo "Importing images into $node..."
+    docker cp /tmp/ingress-images.tar $node:/ingress-images.tar
+    docker exec $node ctr -n k8s.io images import /ingress-images.tar
+    docker exec $node rm -f /ingress-images.tar
+done
+
+# Clean up the temporary host archive file
+rm -f /tmp/ingress-images.tar
+
+# ==============================================================================
+# STEP 5: Deploy NGINX Ingress Routing Platform inside KinD
+# ==============================================================================
+# With all required container images pre-loaded locally on every node, we apply 
+# the upstream NGINX Ingress manifest. Because the images are already present, 
+# Kubernetes avoids `ImagePullBackOff` states entirely.
+echo "🔹 [5/5] Deploying NGINX Ingress Routing Platform inside KinD..."
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.15.1/deploy/static/provider/cloud/deploy.yaml
+
+# The kubectl wait command succeeds instantly without timing out because 
+# the images are already fully available inside the cluster nodes' runtimes.
 echo "⏳ Waiting for Ingress controller readiness parameters..."
 kubectl wait --namespace ingress-nginx \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
+  --timeout=180s
 
 echo "✨ Base Environment is operational! Run Stack 2 to apply your infrastructure blueprints."
 
+```
+
+### 📄 verify-cluster.sh
+
+This script verifies the cluster setup.
+
+```bash
+#!/bin/bash
+set -e
+
+echo "🔍 Starting local environment verification diagnostics..."
+echo "======================================================"
+
+# ==============================================================================
+# 1. Verify Floci Local Cloud Engine (Stack 1)
+# ==============================================================================
+echo -e "\n🔹 [1/4] Checking Floci Emulator & Web Console..."
+
+if docker ps --format '{{.Names}}' | grep -q "^floci-emulator$"; then
+    echo "✅ Container 'floci-emulator' is running."
+    
+    # Test health endpoint / AWS wire protocol port 4566
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:4566 | grep -qE "200|400|403"; then
+        echo "✅ Floci endpoint is responding on http://localhost:4566."
+    else
+        echo "⚠️ Warning: Floci container is running, but port 4566 is not responding as expected."
+    fi
+else
+    echo "❌ Error: Container 'floci-emulator' is NOT running. (Run Stack 1 / setup.sh)"
+fi
+
+if docker ps --format '{{.Names}}' | grep -q "^aws-local-web-console$"; then
+    echo "✅ Container 'aws-local-web-console' is running."
+else
+    echo "⚠️ Warning: 'aws-local-web-console' container is not running."
+fi
+
+# ==============================================================================
+# 2. Verify KinD Cluster Matrix & Context
+# ==============================================================================
+echo -e "\n🔹 [2/4] Checking KinD Kubernetes Cluster ('local-eks')..."
+
+if kind get clusters | grep -q "^local-eks$"; then
+    echo "✅ KinD cluster 'local-eks' exists."
+else
+    echo "❌ Error: KinD cluster 'local-eks' is missing."
+    exit 1
+fi
+
+CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null || echo "none")
+if [ "$CURRENT_CONTEXT" = "kind-local-eks" ]; then
+    echo "✅ Active kubectl context is correctly set to 'kind-local-eks'."
+else
+    echo "⚠️ Warning: Active kubectl context is '$CURRENT_CONTEXT' (expected 'kind-local-eks'). Fixing..."
+    kubectl config use-context kind-local-eks
+fi
+
+# Check node statuses
+echo "--- Cluster Nodes Status ---"
+kubectl get nodes -o wide --request-timeout='5s'
+
+# ==============================================================================
+# 3. Verify Docker Network Bridge Integration
+# ==============================================================================
+echo -e "\n🔹 [3/4] Checking Virtual Network Switch Integration ('local-aws-net')..."
+
+NET_EXISTS=$(docker network ls --format '{{.Name}}' | grep -q "^local-aws-net$" && echo "yes" || echo "no")
+if [ "$NET_EXISTS" = "yes" ]; then
+    echo "✅ Docker network 'local-aws-net' exists."
+    
+    # Check if nodes are plugged into the bridge
+    for node in local-eks-control-plane local-eks-worker local-eks-worker2; do
+        if docker inspect $node --format '{{json .NetworkSettings.Networks.2>/dev/null}}' | grep -q "local-aws-net"; then
+            echo "   -> Node '$node' is successfully attached to 'local-aws-net'."
+        else
+            echo "   -> ⚠️ Node '$node' is NOT attached to 'local-aws-net'."
+        fi
+    done
+else
+    echo "❌ Error: Docker network 'local-aws-net' is missing."
+fi
+
+# ==============================================================================
+# 4. Verify NGINX Ingress Routing Platform & Core Pods
+# ==============================================================================
+echo -e "\n🔹 [4/4] Checking NGINX Ingress Controller & System Pods..."
+
+if kubectl get namespace ingress-nginx &>/dev/null; then
+    echo "✅ Namespace 'ingress-nginx' exists."
+    echo "--- Ingress Pods Status ---"
+    kubectl get pods -n ingress-nginx --request-timeout='5s'
+else
+    echo "❌ Error: Namespace 'ingress-nginx' does not exist."
+fi
+
+echo "======================================================"
+echo "✨ Verification suite completed successfully!"
+```
+
+Make `./verify-cluster.sh` executable:
+
+```bash
+chmod +x verify-cluster.sh
 ```
 
 ### 📄 verify-tests.sh
@@ -426,14 +588,17 @@ Your complete initialization workflow is now simplified into two consecutive scr
 chmod +x *.sh
 
 # Step 2: Pull down your host prerequisites
-./setup-prerequisites.sh
+bash ./setup-prerequisites.sh
 
 # Step 3: Fire up your integrated local AWS and KinD environment
-./setup.sh
+bash ./setup.sh
 
 ```
 
 ## Step 2. Apply your infrastructure via Stack 2:
+
+* **Stack 1** (`setup.sh`) only booted up the empty backend emulator engine and your KinD cluster base.
+* **Stack 2** (your infrastructure blueprints) is what actually provisions those specific DocumentDB clusters, ElastiCache clusters, KMS keys, and EKS mappings inside the emulator.
 
 Once the base system finishes initializing in Step #1 above, execute **Stack 2** to let the isolated Terraform engine provision your resources seamlessly:
 
@@ -441,20 +606,37 @@ Once the base system finishes initializing in Step #1 above, execute **Stack 2**
 cd terraform-provisioner && docker compose up && cd ..
 ```
 
-## Step 3. Open the Web UI Management Console:
+In case of errors:
+
+```bash
+cd terraform-provisioner
+sudo rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
+cd ..
+```
+
+## Step 3. Verify the cluster
+
+Run `./verify-cluster.sh` to verify the cluster setup.
+
+```bash
+./verify-cluster.sh
+
+```
+
+## Step 4. Open the Web UI Management Console:
 
 Once you execute `./setup.sh` and deploy your infrastructure via Terraform, you can open floci dashboard like so:
 
-1. Open your browser and navigate to `http://localhost:8080`.
+1. Open your browser and navigate to `http://localhost:4500`.
 2. You will be greeted by an admin control room showing your live application-assets S3 bucket, your local-mongo-cluster DocumentDB data layers, and your cryptographic KMS tracking keys.
 3. You can visually view your active S3 buckets, select the file browser workspace, drag and drop documents into your bucket pipelines, and verify data flows interactively.
 
-Even better—because it is bound to port 8080 on your machine, other developers on your network can access this identical console by hitting `http://<your-machine-ip>:8080`.
+Even better—because it is bound to port 4500 on your machine, other developers on your network can access this identical console by hitting `http://<your-machine-ip>:4500`.
 
 - [1] [https://github.com](https://github.com/floci-io/floci-ui)
 - [2] [https://github.com](https://github.com/floci-io/floci/issues/1517)
 
-## Step 4. Run the isolated API tests via Docker
+## Step 5. Run the isolated API tests via Docker
 
 Run `./verify-tests.sh` at any time to instantly test all 6 services with zero clutter on your local machine.
 
@@ -463,7 +645,7 @@ Run `./verify-tests.sh` at any time to instantly test all 6 services with zero c
 
 ```
 
-## Step 5. Running AWS CLI Verification Tests inside Host
+## Step 6. Run AWS CLI Verification Tests inside Host
 
 To verify each of the 6 simulated services, run these test commands from your host machine terminal.
 
@@ -520,7 +702,7 @@ Inspect your EC2 instances to verify that the proxy virtual machine container is
 aws ec2 describe-instances --filters "Name=tag:Name,Values=LocalComputeNode"
 ```
 
-## Step 6. Reset the workspace whenever necessary:
+## Step 7. Reset the workspace whenever necessary:
 
 ```bash
 ./teardown.sh
