@@ -174,6 +174,16 @@ Executing CreateCluster instructs Floci to deploy an actual, lightweight k3s (Ku
 
 * The Benefit: It outputs standard kubeconfig data, allowing you to point your native local kubectl or Helm clients directly at it to run actual deployments, pods, and ingress routing loops. [8, 9, 10] 
 
+# Q. How does Floci handles EKS natively (Implicit k3s)?
+
+When you invoke `aws_eks_cluster` against a standard Floci emulator setup without overriding orchestrator configurations:
+
+* **Host Socket Control:** Because `floci-emulator` mounts `/var/run/docker.sock`, Floci listens to the AWS EKS API wire protocol on port `4566`.
+
+* **Dynamic k3s Container Spawning:** Upon receiving a cluster creation command, Floci automatically calls the host Docker socket to pull and launch a `rancher/k3s` container acting as the EKS control plane.
+
+* **Implicit Lifecycle:** This k3s instance is ephemeral—managed automatically inside Docker network bridges tied directly to Floci's internal lifecycle.
+
 # Q. What is the need of having K8S Dualism in this Repository?
 
 While Floci automatically manages a **k3s container** behind the scenes to emulate EKS, our active development environment should route all real container workloads, ingress rules, and `kubectl` contexts to the **KinD matrix**. Both clusters run in parallel inside separate Docker container namespaces attached to the `local-aws-net` bridge network.
@@ -181,6 +191,17 @@ While Floci automatically manages a **k3s container** behind the scenes to emula
 1. **Floci-Managed k3s Engine:** Running `terraform apply` provisions an `aws_eks_cluster` resource (`micro-eks`). Floci handles this by spawning an implicit k3s container running on Floci's internal container subnets. This k3s instance exists strictly to satisfy AWS API fidelity and direct `aws eks` orchestration tests.
 
 2. **Explicit KinD Cluster:** The primary cluster used for application workloads, local deployments (`kubectl`), and NGINX Ingress routing in this environment is the **KinD cluster** (`local-eks`), explicitly built via `setup.sh`.
+
+While Floci's background k3s container works for lightweight API checks, this repository uses an **explicitly configured KinD cluster** for the following reasons:
+
+* **Multi-Node Topologies:** KinD allows declarative creation of dedicated control planes and distinct worker nodes (`local-kubernetes/kind-config.yaml`), whereas Floci defaults to single-node k3s instances.
+
+
+* **Network & Ingress Predictability:** KinD exposes static host ports (`80`, `443`) bound directly to host interfaces for ingress traffic routing.
+
+
+* **Decoupled Execution:** Keeping KinD independent prevents accidental cluster destruction when restarting or tearing down Floci cloud stacks.
+
 
 # Q. What is a crucial Pre-requisite for KinD / Multi-Container Environments
 
