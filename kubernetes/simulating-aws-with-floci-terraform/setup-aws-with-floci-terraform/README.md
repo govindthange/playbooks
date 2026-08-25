@@ -1,6 +1,119 @@
-# 🚀 The AWS & Kubernetes Integration Blueprint
+# 🚀 Local AWS Integration Blueprint
 
+```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
 
+flowchart TB
+
+    %% COLORS & STYLES %%
+    classDef hostStyle fill:#eaf6f8,stroke:#a3d5dc,stroke-width:2px,color:#000000;
+    classDef flociStyle fill:#cdeee7,stroke:#7fcdbb,stroke-width:2px,color:#000000;
+    classDef kindStyle fill:#dff3ef,stroke:#a8ddd0,stroke-width:2px,color:#000000;
+    classDef k3sStyle fill:#e6f2f7,stroke:#9dc6d9,stroke-width:2px,color:#000000;
+    classDef netStyle fill:#f0f9fb,stroke:#b8dde3,stroke-width:1px,stroke-dasharray: 5 5,color:#000000;
+    classDef stackStyle fill:#e3f4f7,stroke:#a3d5dc,stroke-width:1px,color:#000000;
+    classDef hostNodeStyle fill:#eaf6f8,stroke:#a3d5dc,stroke-width:2px,color:#000000;
+
+    subgraph Host ["💻 HOST MACHINE / DEVELOPER WORKSPACE"]
+        
+        UI["🖥️ Web Browser UI<br/>(http://localhost:4500)"]
+        KUBECTL["🔧 kubectl CLI<br/>(Context: kind-local-eks)"]
+        
+        subgraph NetBridge ["🌐 Shared Docker Network Bridge: local-aws-net"]
+            
+            %% STACK 2: TERRAFORM %%
+            subgraph Stack2 ["📦 Stack 2: IaC Engine"]
+                TF["🏗️ Terraform Runner Container<br/>(hashicorp/terraform:1.6.2)"]
+            end
+
+            %% STACK 1: FLOCI BACKEND %%
+            subgraph Stack1 ["📦 Stack 1: Local AWS Cloud Emulator"]
+                FLOCI["⚡ Floci Emulator Container<br/>(floci/floci:latest | Port 4566)"]
+                DASH["📊 Floci Dashboard UI<br/>(floci/floci-ui:latest | Port 4500)"]
+                
+                subgraph FlociServices ["Provisioned AWS Services (via Terraform)"]
+                    S3["🪣 S3 Bucket<br/>(application-assets)"]
+                    DOCDB["🍃 DocumentDB Cluster<br/>(local-mongo-cluster)"]
+                    REDIS["⚡ ElastiCache Redis<br/>(local-cache)"]
+                    KMS["🔑 KMS Key"]
+                    EC2["💻 EC2 Instance<br/>(LocalComputeNode)"]
+                end
+            end
+
+            %% FLOCI AUTO-SPAWNED K3S %%
+            subgraph FlociEKS ["⚡ Floci Native EKS Runtime"]
+                K3S["☸️ Dynamic k3s Container<br/>(rancher/k3s)"]
+            end
+
+            %% KIND CLUSTER %%
+            subgraph KinD ["☸️ KinD Cluster (local-eks)"]
+                PLANE["🎮 Control Plane Node<br/>(local-eks-control-plane)"]
+                INGRESS["🔀 NGINX Ingress Controller<br/>(Ports 80 / 443)"]
+                WORKER1["⚙️ Worker Node 1<br/>(local-eks-worker)"]
+                WORKER2["⚙️ Worker Node 2<br/>(local-eks-worker2)"]
+                PODS["📦 Application Pods"]
+            end
+
+            %% FORCE STRICT TOP-TO-BOTTOM STACKING %%
+            Stack2 ~~~ Stack1
+            Stack1 ~~~ FlociEKS
+            FlociEKS ~~~ KinD
+
+        end
+    end
+
+    %% RELATIONSHIPS AND FLOWS %%
+    UI ==>|Visualizes AWS State| DASH
+    DASH -->|Queries Endpoint| FLOCI
+    
+    KUBECTL ==>|Deploys & Controls| PLANE
+    
+    TF ==>|1. Applies provider.tf to :4566| FLOCI
+    FLOCI -->|2. Provisions Mock Services| S3 & DOCDB & REDIS & KMS & EC2
+    
+    FLOCI ==>|3. Spawns EKS Control Plane via Docker Socket| K3S
+    
+    PLANE --- WORKER1
+    PLANE --- WORKER2
+    WORKER1 --- PODS
+    WORKER2 --- PODS
+    PLANE --- INGRESS
+
+    PODS -.->|4. App Calls Emulated AWS APIs<br/>http://floci-emulator:4566| FLOCI
+
+    %% APPLY CLASSES %%
+    class Host hostStyle;
+    class TF terraformStyle;
+    class FLOCI,DASH,S3,DOCDB,REDIS,KMS,EC2 flociStyle;
+    class PLANE,WORKER1,WORKER2,INGRESS,PODS kindStyle;
+    class K3S k3sStyle;
+    class NetBridge netStyle;
+    class Stack1,Stack2,FlociServices,FlociEKS,KinD stackStyle;
+    class UI,KUBECTL hostNodeStyle;
+
+```
 
 ### 📂 Unified Folder Structure
 
