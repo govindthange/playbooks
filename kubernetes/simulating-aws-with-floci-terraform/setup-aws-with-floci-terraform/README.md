@@ -1,120 +1,5 @@
 # 🚀 Local AWS Integration Blueprint
 
-```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#eaf6f8',
-    'primaryTextColor': '#000000',
-    'primaryBorderColor': '#a3d5dc',
-    'lineColor': '#6fb8c9',
-    'edgeLabelBackground': 'transparent',
-    'fontFamily': 'arial',
-    'mainBkg': '#eaf6f8',
-    'secondBkg': '#d6ecf3',
-    'tertiaryColor': '#f0f9fb',
-    'clusterBkg': '#f5fbfc',
-    'clusterBorder': '#a3d5dc',
-    'background': '#ffffff',
-    'secondaryColor': '#d6ecf3',
-    'tertiaryTextColor': '#000000',
-    'secondaryTextColor': '#000000',
-    'textColor': '#000000',
-    'nodeTextColor': '#000000'
-  },
-  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
-}}%%
-
-flowchart TB
-
-    %% COLORS & STYLES %%
-    classDef hostStyle fill:#eaf6f8,stroke:#a3d5dc,stroke-width:2px,color:#000000;
-    classDef flociStyle fill:#cdeee7,stroke:#7fcdbb,stroke-width:2px,color:#000000;
-    classDef kindStyle fill:#dff3ef,stroke:#a8ddd0,stroke-width:2px,color:#000000;
-    classDef k3sStyle fill:#e6f2f7,stroke:#9dc6d9,stroke-width:2px,color:#000000;
-    classDef netStyle fill:#f0f9fb,stroke:#b8dde3,stroke-width:1px,stroke-dasharray: 5 5,color:#000000;
-    classDef stackStyle fill:#e3f4f7,stroke:#a3d5dc,stroke-width:1px,color:#000000;
-    classDef hostNodeStyle fill:#eaf6f8,stroke:#a3d5dc,stroke-width:2px,color:#000000;
-
-    subgraph Host ["💻 HOST MACHINE / DEVELOPER WORKSPACE"]
-        
-        UI["🖥️ Web Browser UI<br/>(http://localhost:4500)"]
-        KUBECTL["🔧 kubectl CLI<br/>(Context: kind-local-eks)"]
-        
-        subgraph NetBridge ["🌐 Shared Docker Network Bridge: local-aws-net"]
-            
-            %% STACK 2: TERRAFORM %%
-            subgraph Stack2 ["📦 Stack 2: IaC Engine"]
-                TF["🏗️ Terraform Runner Container<br/>(hashicorp/terraform:1.6.2)"]
-            end
-
-            %% STACK 1: FLOCI BACKEND %%
-            subgraph Stack1 ["📦 Stack 1: Local AWS Cloud Emulator"]
-                FLOCI["⚡ Floci Emulator Container<br/>(floci/floci:latest | Port 4566)"]
-                DASH["📊 Floci Dashboard UI<br/>(floci/floci-ui:latest | Port 4500)"]
-                
-                subgraph FlociServices ["Provisioned AWS Services (via Terraform)"]
-                    S3["🪣 S3 Bucket<br/>(application-assets)"]
-                    DOCDB["🍃 DocumentDB Cluster<br/>(local-mongo-cluster)"]
-                    REDIS["⚡ ElastiCache Redis<br/>(local-cache)"]
-                    KMS["🔑 KMS Key"]
-                    EC2["💻 EC2 Instance<br/>(LocalComputeNode)"]
-                end
-            end
-
-            %% FLOCI AUTO-SPAWNED K3S %%
-            subgraph FlociEKS ["⚡ Floci Native EKS Runtime"]
-                K3S["☸️ Dynamic k3s Container<br/>(rancher/k3s)"]
-            end
-
-            %% KIND CLUSTER %%
-            subgraph KinD ["☸️ KinD Cluster (local-eks)"]
-                PLANE["🎮 Control Plane Node<br/>(local-eks-control-plane)"]
-                INGRESS["🔀 NGINX Ingress Controller<br/>(Ports 80 / 443)"]
-                WORKER1["⚙️ Worker Node 1<br/>(local-eks-worker)"]
-                WORKER2["⚙️ Worker Node 2<br/>(local-eks-worker2)"]
-                PODS["📦 Application Pods"]
-            end
-
-            %% FORCE STRICT TOP-TO-BOTTOM STACKING %%
-            Stack2 ~~~ Stack1
-            Stack1 ~~~ FlociEKS
-            FlociEKS ~~~ KinD
-
-        end
-    end
-
-    %% RELATIONSHIPS AND FLOWS %%
-    UI ==>|Visualizes AWS State| DASH
-    DASH -->|Queries Endpoint| FLOCI
-    
-    KUBECTL ==>|Deploys & Controls| PLANE
-    
-    TF ==>|1. Applies provider.tf to :4566| FLOCI
-    FLOCI -->|2. Provisions Mock Services| S3 & DOCDB & REDIS & KMS & EC2
-    
-    FLOCI ==>|3. Spawns EKS Control Plane via Docker Socket| K3S
-    
-    PLANE --- WORKER1
-    PLANE --- WORKER2
-    WORKER1 --- PODS
-    WORKER2 --- PODS
-    PLANE --- INGRESS
-
-    PODS -.->|4. App Calls Emulated AWS APIs<br/>http://floci-emulator:4566| FLOCI
-
-    %% APPLY CLASSES %%
-    class Host hostStyle;
-    class TF terraformStyle;
-    class FLOCI,DASH,S3,DOCDB,REDIS,KMS,EC2 flociStyle;
-    class PLANE,WORKER1,WORKER2,INGRESS,PODS kindStyle;
-    class K3S k3sStyle;
-    class NetBridge netStyle;
-    class Stack1,Stack2,FlociServices,FlociEKS,KinD stackStyle;
-    class UI,KUBECTL hostNodeStyle;
-
-```
-
 ### 📂 Unified Folder Structure
 
 Create a root folder named local-cloud-env with the following sub-directories and files:
@@ -132,6 +17,7 @@ local-cloud-env/
 ├── setup-prerequisites.sh       # Installs native host dependencies
 ├── setup.sh                     # Boots up infrastructure and KinD configuration
 ├── verify-tests.sh              # Runs isolated containerized AWS CLI checks
+├── restart.sh                   # Resume containers after shutdown/reboot
 └── teardown.sh                  # Wipes the sandbox environment completely
 ```
 
@@ -180,11 +66,69 @@ services:
       floci:
         condition: service_healthy
 
+  # --- Tier 3: Dedicated RDS Aurora MySQL Database Engine ---
+  local-mysql:
+    image: mysql:8.0
+    container_name: local-mysql-engine
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password123
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=password123
+      - MYSQL_DATABASE=test_db  # 👈 Grants admin full permissions to test_db
+    networks:
+      - env-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword123"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  # --- Tier 4: MySQL Visual Database Explorer ---
+  db-web-client:
+    image: adminer:latest
+    container_name: aws-rds-web-client
+    ports:
+      - "8082:8080"
+    networks:
+      - env-net
+    depends_on:
+      - local-mysql
+
+  # --- Tier 5: AWS DocumentDB Engine (MongoDB Protocol Compatible) ---
+  local-mongo:
+    image: mongo:6.0
+    container_name: local-mongo-cluster
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - env-net
+
+  # --- Tier 6: DocumentDB Visual Web Client & Explorer ---
+  docdb-web-client:
+    image: mongo-express:latest
+    container_name: aws-docdb-web-client
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password123
+      - ME_CONFIG_MONGODB_SERVER=local-mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH=false
+    networks:
+      - env-net
+    depends_on:
+      - local-mongo
+
 networks:
   env-net:
     name: local-aws-net
     driver: bridge
-
 ```
 
 
@@ -248,13 +192,40 @@ services:
       echo '🚀 Step 2: Deploying your six AWS services to Floci...';
       terraform apply -auto-approve
       "
-
 ```
 
 ### 📄 terraform-provisioner/provider.tf
 
 ```hcl
 terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "mock-key"
+  secret_key                  = "mock-secret"
+  s3_use_path_style           = true
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+  skip_region_validation      = true
+
+  endpoints {
+    s3          = "http://floci-emulator:4566"
+    kms         = "http://floci-emulator:4566"
+    rds         = "http://floci-emulator:4566"
+    docdb       = "http://floci-emulator:4566"
+    elasticache = "http://floci-emulator:4566"
+    ec2         = "http://floci-emulator:4566"
+    eks         = "http://floci-emulator:4566"
+  }
+}terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -287,21 +258,34 @@ provider "aws" {
 ### 📄 terraform-provisioner/main.tf
 
 ```hcl
-resource "aws_docdb_cluster" "local_mongo" {
-  cluster_identifier        = "local-mongo-cluster"
-  engine                    = "docdb"
-  master_username           = "admin"
-  master_password           = "password123"
-  skip_final_snapshot       = true
-  global_cluster_identifier = null
-
-  lifecycle {
-    ignore_changes = [
-      global_cluster_identifier,
-    ]
+# Register DocumentDB cluster metadata
+resource "null_resource" "register_docdb" {
+  provisioner "local-exec" {
+    command = <<EOT
+      wget --quiet \
+        --header="Content-Type: application/x-www-form-urlencoded" \
+        --post-data="Action=CreateDBCluster" \
+        "&DBClusterIdentifier=local-mongo-cluster" \
+        "&Engine=docdb" \
+        "&MasterUsername=admin" \
+        "&MasterUserPassword=password123" \
+        "&Version=2014-10-31" \
+        "http://floci-emulator:4566/" \
+        -O - || true
+    EOT
   }
 }
 
+# 'engine' field value could be one of ["aurora-mysql" "aurora-postgresql" "mysql" "postgres"]
+resource "aws_rds_cluster" "local_rds_instance" {
+  cluster_identifier  = "local-rds-cluster"
+  engine              = "aurora-mysql"
+  master_username     = "admin"
+  master_password     = "password123"
+  skip_final_snapshot = true
+}
+
+# Standard Redis instance without subnet groups
 resource "aws_elasticache_replication_group" "local_cache" {
   replication_group_id = "local-cache"
   description          = "Local Redis cache"
@@ -366,7 +350,6 @@ resource "aws_instance" "local_compute" {
   instance_type = "t3.micro"
   tags = { Name = "LocalComputeNode" }
 }
-
 ```
 
 # ⚙️ The Unified Lifecycle Scripts
@@ -435,7 +418,6 @@ echo "🚀 Validating Tool Installations..."
 echo "✅ KinD Version: $(kind version)"
 echo "✅ Kubectl Version: $(kubectl version --client --output=yaml | grep gitVersion)"
 echo "🎉 Prerequisites successfully configured! You can now execute ./setup.sh safely."
-
 ```
 
 You need the following three core tools installed natively on your host machine:
@@ -464,6 +446,14 @@ This master orchestrator weaves all isolated commands into a single sequence. It
 set -e
 
 echo "🚀 Commencing unified environment orchestration..."
+
+systemctl is-active --quiet docker || sudo systemctl start docker
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Error: Docker daemon is not running. Please start Docker Desktop/Engine first."
+    exit 1
+fi
+
+docker context use default
 
 # ==============================================================================
 # STEP 1: Boot Core Platform Cloud Engine (Stack 1)
@@ -546,7 +536,6 @@ kubectl wait --namespace ingress-nginx \
   --timeout=180s
 
 echo "✨ Base Environment is operational! Run Stack 2 to apply your infrastructure blueprints."
-
 ```
 
 ### 📄 verify-cluster.sh
@@ -736,10 +725,14 @@ echo "🔄 Restarting local cloud and Kubernetes environment..."
 # ==============================================================================
 # STEP 1: Verify Docker Engine Readiness
 # ==============================================================================
+
+systemctl is-active --quiet docker || sudo systemctl start docker
 if ! docker info > /dev/null 2>&1; then
     echo "❌ Error: Docker daemon is not running. Please start Docker Desktop/Engine first."
     exit 1
 fi
+
+docker context use default
 
 # ==============================================================================
 # STEP 2: Resume Core Platform Backend Engine (Stack 1)
@@ -794,7 +787,6 @@ cd terraform-provisioner && docker compose up && cd ..
 
 echo "✨ System environment successfully resumed!"
 echo "👉 Run './verify-cluster.sh' to confirm all components are healthy."
-
 ```
 
 Make it executable and execute it whenever you need a fresh slate:
