@@ -1,6 +1,73 @@
+# Mermaid Synxtax
+
+Ref: [Mermaid Synxtax](https://mermaid.ai/open-source/syntax/flowchart.html)
+
+### New Node Synxtax
+
+```mmd
+node_name@{ img: "https://example.com/image.png", label: "Image Label", pos: "t", w: 60, h: 60, constraint: "off" }
+```
+
+### New Edge Synxtax
+
+```mmd
+  A edge_name@==> B
+  edge_name@{ curve: linear, animate: true, animation: fast }
+```
+
+### Directions in Graph
+
+```mmd
+flowchart LR
+  subgraph TOP
+    direction TB
+    subgraph B1
+        direction RL
+        i1 -->f1
+    end
+    subgraph B2
+        direction BT
+        i2 -->f2
+    end
+  end
+  A --> TOP --> B
+  B1 --> B2
+```
+
+> **Limitation:** If any of a subgraph's nodes are linked to the outside, subgraph direction will be ignored. Instead the subgraph will inherit the direction of the parent graph:
+
+```mermaid
+flowchart LR
+  subgraph TOP
+    direction TB
+    subgraph B1
+        direction RL
+        i1 -->f1
+    end
+    subgraph B2
+        direction BT
+        i2 -->f2
+    end
+  end
+  A --> TOP --> B
+  B1 --> B2
+```
+
+### Mermaid Font Support
+
+Supported prefixes: fa, fab, fas, far, fal, fad.
+
+```mmd
+flowchart TD
+    B["fa:fa-twitter for peace"]
+    B-->C[fa:fa-ban forbidden]
+    B-->D(fa:fa-spinner)
+    B-->E(A fa:fa-camera-retro perhaps?)
+```
+
 # Mermaid Shapes
 
-Ref: [Mermaid Document](https://github.com/mermaid-js/mermaid/blob/develop/README.md)
+Ref: [Mermaid Document](https://github.com/mermaid-js/mermaid/blob/develop/README.md) 
 
 ### 1. Standard & Process Shapes (Basic)
 
