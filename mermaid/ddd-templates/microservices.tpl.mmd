@@ -55,23 +55,23 @@ flowchart LR
         end
 
         subgraph subMicroservices ["Microservices (1..n)"]
-            srvService1Fe@{ shape: rect, label: "🧩 Micro Frontend" }
+            srvService1Fe@{ shape: curv-trap, label: "🧩 Micro Frontend" }
             srvService1@{ shape: hex, label: "📦 Microservice 1" }
             srvService1Fe --- srvService1
             
-            srvService2Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService2Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
             srvService2@{ shape: hex, label: "📦 Microservice 2" }
             srvService2Fe --- srvService2
             
-            srvService4Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService4Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
             srvService4@{ shape: hex, label: "📦 Microservice 4" }
             srvService4Fe --- srvService4
             
-            srvService3Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService3Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
             srvService3@{ shape: hex, label: "📦 Microservice 3" }
             srvService3Fe --- srvService3
             
-            srvService5Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService5Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
             srvService5@{ shape: hex, label: "📦 Microservice 5" }
             srvService5Fe --- srvService5            
             
@@ -81,7 +81,7 @@ flowchart LR
         
         dbOracle@{ shape: cyl, label: "Oracle DB" }
         stFile@{ shape: lin-doc, label: "🗄️ File Storage" }
-        serviceBusTop@{ shape: rect, label: "📯 Service Bus (Queues)" }
+        serviceBus@{ shape: h-cyl, label: "📯 Service Bus (Queues)" }
 
         subgraph subAudit [Audit / Log]
             logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
@@ -141,7 +141,11 @@ flowchart LR
     edgeEureka@{ curve: linear, animate: true, animation: fast }
 
     %% Notification / External Integrations matching reference layout
-    serviceBusTop -.-> srvNotification
-    srvNotification -.-> serviceBusTop
-    srvNotification --> emailer
-    srvNotification -.-> smsProvider
+    serviceBus edgeServiceBus@--> srvNotification
+    edgeServiceBus@{ curve: linear, animate: true, animation: fast }
+
+    srvNotification edgeEmailNotify@==> emailer
+    edgeEmailNotify@{ curve: linear, animate: true, animation: fast }
+
+    srvNotification edgeSmsNotify@==> smsProvider
+    edgeSmsNotify@{ curve: linear, animate: true, animation: fast }
