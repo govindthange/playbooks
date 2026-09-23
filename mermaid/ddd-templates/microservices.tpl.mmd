@@ -34,7 +34,7 @@ flowchart LR
     firewall@{ shape: rect, label: "🧱 Firewall" }
     
     smsProvider@{ shape: rect, label: "📱 SMS Provider" }
-    emailer@{ shape: rect, label: "✉️ Emailer" }
+    emailServer@{ shape: rect, label: "✉️ emailServer" }
 
     subgraph subDmz [DMZ]
         systemUser@{ shape: sl-rect, label: "👤 System User" }
@@ -77,7 +77,6 @@ flowchart LR
             
             srvNotification@{ shape: hex, label: "🔔 Notification Microservice" }
         end
-
         
         dbOracle@{ shape: cyl, label: "Oracle DB" }
         stFile@{ shape: lin-doc, label: "🗄️ File Storage" }
@@ -141,11 +140,26 @@ flowchart LR
     edgeEureka@{ curve: linear, animate: true, animation: fast }
 
     %% Notification / External Integrations matching reference layout
-    serviceBus edgeServiceBus@--> srvNotification
+    %% subMicroservices edgeNotification@==> serviceBus
+    %% edgeNotification@{ curve: linear, animate: true, animation: fast }
+
+    serviceBus edgeServiceBus@==> srvNotification
     edgeServiceBus@{ curve: linear, animate: true, animation: fast }
 
-    srvNotification edgeEmailNotify@==> emailer
+    srvNotification edgeEmailNotify@==> emailServer
     edgeEmailNotify@{ curve: linear, animate: true, animation: fast }
 
     srvNotification edgeSmsNotify@==> smsProvider
     edgeSmsNotify@{ curve: linear, animate: true, animation: fast }
+
+
+  %% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
+  classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
+  classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
+  classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
+  classDef reactShellClass fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+
+  class srvService4,srvService5 coreDomainContextClass;
+  class srvNotification supportingDomainContextClass;    
+  class srvService1Fe,srvService1Fe,srvService2Fe,srvService3Fe,srvService4Fe,srvService5Fe uiClass;
+  class srvReactShell reactShellClass;
