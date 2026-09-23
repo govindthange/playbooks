@@ -1,0 +1,147 @@
+---
+
+title: "Microservices - Tactical Plan"
+
+---
+
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
+
+flowchart LR
+    endUser@{ shape: sl-rect, label: "👤 End User" }
+    internet@{ shape: cloud, label: "Internet" }
+    firewall@{ shape: rect, label: "🧱 Firewall" }
+    
+    smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+    emailer@{ shape: rect, label: "✉️ Emailer" }
+
+    subgraph subDmz [DMZ]
+        systemUser@{ shape: sl-rect, label: "👤 System User" }
+        ldap@{ shape: cloud, label: "🪪 LDAP" }
+        
+        subgraph subApiGateway [🌐 API Gateway]
+            srvReactShell@{ shape: rect, label: "⚛️ React Shell" }
+            srvZuul@{ shape: rect, label: "🔀 Zuul / Ribbon" }
+            srvAccessControl@{ shape: rect, label: "🛡 Access Control" }
+        end
+    end
+
+    subgraph subNonDmz [Non DMZ]
+        subgraph subRegistry [Registry]
+            direction LR
+            srvEureka@{ shape: rect, label: "🧭 Eureka Server" }
+            srvConfig@{ shape: rect, label: "🔧 Config Server" }
+        end
+
+        subgraph subMicroservices ["Microservices (1..n)"]
+            srvService1Fe@{ shape: rect, label: "🧩 Micro Frontend" }
+            srvService1@{ shape: hex, label: "📦 Microservice 1" }
+            srvService1Fe --- srvService1
+            
+            srvService2Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService2@{ shape: hex, label: "📦 Microservice 2" }
+            srvService2Fe --- srvService2
+            
+            srvService4Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService4@{ shape: hex, label: "📦 Microservice 4" }
+            srvService4Fe --- srvService4
+            
+            srvService3Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService3@{ shape: hex, label: "📦 Microservice 3" }
+            srvService3Fe --- srvService3
+            
+            srvService5Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService5@{ shape: hex, label: "📦 Microservice 5" }
+            srvService5Fe --- srvService5            
+            
+            srvNotification@{ shape: hex, label: "🔔 Notification Microservice" }
+        end
+
+        
+        dbOracle@{ shape: cyl, label: "Oracle DB" }
+        stFile@{ shape: lin-doc, label: "🗄️ File Storage" }
+        serviceBusTop@{ shape: rect, label: "📯 Service Bus (Queues)" }
+
+        subgraph subAudit [Audit / Log]
+            logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
+            logLogstash@{ shape: rect, label: "📥 Logstash" }
+            logKibana@{ shape: rect, label: "📈 Kibana" }
+        end
+
+        usrAdmin@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+    end
+
+    srvReactShell -.-> srvService1Fe
+    srvReactShell -.-> srvService2Fe
+    srvReactShell -.-> srvService4Fe
+    srvReactShell -.-> srvService3Fe
+    srvReactShell -.-> srvService5Fe
+
+    endUser edgeWeb@--- internet
+    edgeWeb@{ curve: linear }
+
+    internet edgeFirewall@--- firewall
+    edgeFirewall@{ curve: linear }
+
+    firewall edgeGateway@==>|443| subApiGateway
+    edgeGateway@{ curve: linear, animate: true, animation: slow }
+
+    ldap edgeLdap@-.- srvAccessControl
+    edgeLdap@{ curve: linear }
+
+    systemUser edgeSidbi@-->|443| subApiGateway
+    edgeSidbi@{ curve: linear }
+    
+    subApiGateway edgeMicro@==>|8080...| subMicroservices
+    edgeMicro@{ curve: linear, animate: true, animation: slow }
+
+    subApiGateway edgeRegistry@==>|8761| subRegistry
+    edgeRegistry@{ curve: linear, animate: true, animation: slow }
+
+    srvService4 edgeDb1@==> dbOracle
+    edgeDb1@{ curve: linear, animate: true, animation: fast }
+
+    srvService5 edgeDb2@==> stFile
+    edgeDb2@{ curve: linear, animate: true, animation: fast }
+
+    subMicroservices edgeAudit@==>|5000| subAudit
+    edgeAudit@{ curve: linear, animate: true, animation: fast }
+
+    logLogstash edgeLog@--> |9200| logElastic
+    edgeLog@{ curve: linear, animate: true, animation: fast }
+
+    usrAdmin edgeAdmin@-.->|5601| subAudit
+    edgeAdmin@{ curve: linear, animate: true, animation: fast }
+
+    subRegistry edgeConfig@-.->|5000| subAudit
+    edgeConfig@{ curve: linear, animate: true, animation: fast }
+
+    subMicroservices edgeEureka@==>|8761| subRegistry
+    edgeEureka@{ curve: linear, animate: true, animation: fast }
+
+    %% Notification / External Integrations matching reference layout
+    serviceBusTop -.-> srvNotification
+    srvNotification -.-> serviceBusTop
+    srvNotification --> emailer
+    srvNotification -.-> smsProvider

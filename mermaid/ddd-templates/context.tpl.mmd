@@ -1,0 +1,50 @@
+---
+
+title: "Application Title - DDD: Context Map"
+
+---
+
+flowchart TB
+
+  %%{init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#eaf6f8',
+      'primaryTextColor': '#000000',
+      'primaryBorderColor': '#a3d5dc',
+      'lineColor': '#6fb8c9',
+      'edgeLabelBackground': 'transparent',
+      'fontFamily': 'arial',
+      'mainBkg': '#eaf6f8',
+      'secondBkg': '#d6ecf3',
+      'tertiaryColor': '#f0f9fb',
+      'clusterBkg': '#f5fbfc',
+      'clusterBorder': '#a3d5dc',
+      'background': '#ffffff',
+      'secondaryColor': '#d6ecf3',
+      'tertiaryTextColor': '#000000',
+      'secondaryTextColor': '#000000',
+      'textColor': '#000000',
+      'nodeTextColor': '#000000'
+    },
+    'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+  }}%%
+
+  subgraph mainContainer[" "]
+    direction TB
+    
+    coreSubdomainContext1(["<b>Core Subdomain</b><br>Context"])
+    supportingSubdomainContext1(["<b>Supporting Subdomain</b><br>Context"])
+    
+    coreSubdomainContext1 --- supportingSubdomainContext1
+  end
+
+  %% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
+  classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
+  classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
+  
+  class coreSubdomainContext1 coreDomainContextClass;
+  class supportingSubdomainContext1 supportingDomainContextClass;
+
+  %% Subgraph Box Styling
+  style mainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;

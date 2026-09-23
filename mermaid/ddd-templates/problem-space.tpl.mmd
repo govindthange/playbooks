@@ -1,0 +1,96 @@
+---
+
+title: "Application Title - DDD: Problem Space"
+
+---
+
+%%{
+    init: {
+    'theme': 'base',
+    'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
+
+flowchart TB
+    subgraph mainContainer[" "]
+        
+        %% Core Domain
+        subgraph coreDomain["Core Domain"]
+            
+            subgraph coreSubdomain1["Subdomain #1"]
+                coreSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
+                coreSubdomain1Aspect2(["Subdomain 1, Aspect 2"])
+                coreSubdomain1Aspect3(["Subdomain 1, Aspect 3"])
+                coreSubdomain1Aspect4(["Subdomain 1, Aspect 4"])
+            end
+            
+            subgraph coreSubdomain2["Subdomain #2"]
+                coreSubdomain2Aspect1(["Subdomain 2, Aspect 1"])
+            end
+            
+            subgraph coreSubdomain3["Subdomain #3"]
+                coreSubdomain3Aspect1(["Subdomain 3, Aspect 1"])
+                coreSubdomain3Aspect2(["Subdomain 3, Aspect 2"])
+            end
+            
+        end
+        
+        %% Generic Domain
+        subgraph genericDomain["Generic Domain"]
+            genericAuthNZ(["❶ Role Based Security<br>(AuthN / AuthZ)"])
+            genericHealthMonitoring(["❶ Health/Monitoring"])
+            genericAuditLogs(["❶ Audit/Logs"])
+            genericNotifications(["❶ Notifications"])
+        end
+        
+        %% Supporting Domain
+        subgraph supportingDomain["Supporting Domain"]
+            
+            subgraph supportingSubdomain1["Subdomain #1"]
+                supportingSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
+                supportingSubdomain1Aspect2(["Subdomain 1, Aspect 2"])
+            end
+            
+            subgraph supportingSubdomain2["Subdomain #2"]
+                supportingSubdomain2Aspect1(["Subdomain 2, Aspect 1"])
+                supportingSubdomain2Aspect2(["Subdomain 2, Aspect 2"])
+                supportingSubdomain2Aspect3(["Subdomain 2, Aspect 3"])
+            end
+            
+            subgraph supportingSubdomain3["Subdomain #3"]
+                supportingSubdomain3Aspect1(["Subdomain 3, Aspect 1"])
+                supportingSubdomain3Aspect2(["Subdomain 3, Aspect 2"])
+                supportingSubdomain3Aspect3(["Subdomain 3, Aspect 3"])
+                supportingSubdomain3Aspect4(["Subdomain 3, Aspect 4"])
+            end
+            
+        end
+
+    end
+
+    %% Apply rounded/stadium shapes to subgraphs via class styling
+    classDef subdomainClass fill:#fdfdfd,stroke:#555,stroke-dasharray: 5 5,rx:100,ry:50;
+    classDef coreDomainClass fill:#dce6f8,stroke:#4a7bb0,rx:120,ry:60;
+    classDef supportingDomainClass fill:#d3edd9,stroke:#48a05b,rx:150,ry:80;
+    
+    class coreDomain,genericDomain,supportingDomain subdomainClass;
+    class coreSubdomain1,coreSubdomain2,coreSubdomain3 coreDomainClass;
+    class supportingSubdomain1,supportingSubdomain2,supportingSubdomain3 supportingDomainClass;
