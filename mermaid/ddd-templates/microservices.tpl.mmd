@@ -1,32 +1,29 @@
 ---
-
 title: "Microservices - Tactical Plan"
-
+config:
+  flowchart:
+    curve:basis
+  theme: base
+  themeVariables:
+    primaryColor: '#eaf6f8'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#a3d5dc'
+    lineColor: '#6fb8c9'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'arial'
+    mainBkg: '#eaf6f8'
+    secondBkg: '#d6ecf3'
+    tertiaryColor: '#f0f9fb'
+    clusterBkg: '#f5fbfc'
+    clusterBorder: '#a3d5dc'
+    background: '#ffffff'
+    secondaryColor: '#d6ecf3'
+    tertiaryTextColor: '#000000'
+    secondaryTextColor: '#000000'
+    textColor: '#000000'
+    nodeTextColor: '#000000'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
 ---
-
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#eaf6f8',
-    'primaryTextColor': '#000000',
-    'primaryBorderColor': '#a3d5dc',
-    'lineColor': '#6fb8c9',
-    'edgeLabelBackground': 'transparent',
-    'fontFamily': 'arial',
-    'mainBkg': '#eaf6f8',
-    'secondBkg': '#d6ecf3',
-    'tertiaryColor': '#f0f9fb',
-    'clusterBkg': '#f5fbfc',
-    'clusterBorder': '#a3d5dc',
-    'background': '#ffffff',
-    'secondaryColor': '#d6ecf3',
-    'tertiaryTextColor': '#000000',
-    'secondaryTextColor': '#000000',
-    'textColor': '#000000',
-    'nodeTextColor': '#000000'
-  },
-  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
-}}%%
 
 flowchart
   subgraph subMainContainer[" "]
@@ -34,9 +31,6 @@ flowchart
     endUser@{ shape: sl-rect, label: "👤 End User" }
     internet@{ shape: cloud, label: "Internet" }
     firewall@{ shape: rect, label: "🧱 Firewall" }
-    
-    smsProvider@{ shape: rect, label: "📱 SMS Provider" }
-    emailServer@{ shape: rect, label: "✉️ emailServer" }
 
     subgraph subDmz [DMZ]
         systemUser@{ shape: sl-rect, label: "👤 System User" }
@@ -57,32 +51,35 @@ flowchart
         end
 
         subgraph subMicroservices ["Microservices (1..n)"]
-            srvService1Fe@{ shape: curv-trap, label: "🧩 Micro Frontend" }
+            mfeService1@{ shape: curv-trap, label: "🧩 Microfrontend 1" }
             srvService1@{ shape: hex, label: "📦 Microservice 1" }
-            srvService1Fe --- srvService1
+            mfeService1 --- srvService1
             
-            srvService2Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
+            mfeService2@{ shape: curv-trap, label: "🧩 Microfrontend 2" }
             srvService2@{ shape: hex, label: "📦 Microservice 2" }
-            srvService2Fe --- srvService2
+            mfeService2 --- srvService2
             
-            srvService4Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
+            mfeService4@{ shape: curv-trap, label: "🧩 Microfrontend 4" }
             srvService4@{ shape: hex, label: "📦 Microservice 4" }
-            srvService4Fe --- srvService4
+            mfeService4 --- srvService4
             
-            srvService3Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
+            mfeService3@{ shape: curv-trap, label: "🧩 Microfrontend 3" }
             srvService3@{ shape: hex, label: "📦 Microservice 3" }
-            srvService3Fe --- srvService3
+            mfeService3 --- srvService3
             
-            srvService5Fe@{ shape: curv-trap, label: "🧩 Micro frontend" }
+            mfeService5@{ shape: curv-trap, label: "🧩 Microfrontend 5" }
             srvService5@{ shape: hex, label: "📦 Microservice 5" }
-            srvService5Fe --- srvService5            
+            mfeService5 --- srvService5
             
             srvNotification@{ shape: hex, label: "🔔 Notification Microservice" }
+            serviceBus@{ shape: h-cyl, label: "📯 Service Bus (Queues)" }
         end
         
         dbOracle@{ shape: cyl, label: "Oracle DB" }
-        stFile@{ shape: lin-doc, label: "🗄️ File Storage" }
-        serviceBus@{ shape: h-cyl, label: "📯 Service Bus (Queues)" }
+        fileStorage@{ shape: lin-doc, label: "🗄️ File Storage" }
+    
+        smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+        emailServer@{ shape: rect, label: "✉️ Email Server" }
 
         subgraph subAudit [Audit / Log]
             logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
@@ -96,19 +93,36 @@ flowchart
     %% Keep firewall over subApiGateway
     %% firewall ~~~ subDmz
 
-    srvReactShell -.-> srvService1Fe
-    srvReactShell -.-> srvService2Fe
-    srvReactShell -.-> srvService4Fe
-    srvReactShell -.-> srvService3Fe
-    srvReactShell -.-> srvService5Fe
+    %% Individual animated and styled React Shell connections
+    srvReactShell edgeUi1@-.-> mfeService1
+    edgeUi1@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi2@-.-> mfeService2
+    edgeUi2@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi3@-.-> mfeService4
+    edgeUi3@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi4@-.-> mfeService3
+    edgeUi4@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi5@-.-> mfeService5
+    edgeUi5@{ curve: basis, animate: true, animation: fast }
+    
+    %% Apply stroke color and width to all 5 branch indices (0 through 4)
+    linkStyle 0,1,2,3,4 stroke:#ffb300, stroke-width:2px;
+    
+    %% Style this specific link index with your custom color
+    linkStyle 5,6,7,8,9 stroke:#ffb300, stroke-width:2px;
+    linkStyle 0,1,2,3,4 stroke:#ffe082, stroke-width:2px;
 
     endUser edgeWeb@--- internet
     edgeWeb@{ curve: linear }
 
-    internet edgeFirewall@--- firewall
-    edgeFirewall@{ curve: linear }
+    internet edgeFirewall@==> |443| firewall
+    edgeFirewall@{ curve: linear, animate: true, animation: slow }
 
-    firewall edgeGateway@==>|443| subApiGateway
+    firewall edgeGateway@==> subDmz
     edgeGateway@{ curve: linear, animate: true, animation: slow }
 
     ldap edgeLdap@-.- srvAccessControl
@@ -118,15 +132,15 @@ flowchart
     edgeSidbi@{ curve: linear }
     
     subApiGateway edgeMicro@==>|8080...| subMicroservices
-    edgeMicro@{ curve: linear, animate: true, animation: slow }
+    edgeMicro@{ curve: linear, animate: true, animation: fast }
 
     subApiGateway edgeRegistry@==>|8761| subRegistry
-    edgeRegistry@{ curve: linear, animate: true, animation: slow }
+    edgeRegistry@{ curve: linear, animate: true, animation: fast }
 
     srvService4 edgeDb1@==> dbOracle
     edgeDb1@{ curve: linear, animate: true, animation: fast }
 
-    srvService5 edgeDb2@==> stFile
+    srvService5 edgeDb2@==> fileStorage
     edgeDb2@{ curve: linear, animate: true, animation: fast }
 
     subMicroservices edgeAudit@==>|5000| subAudit
@@ -136,10 +150,10 @@ flowchart
     edgeLog@{ curve: linear, animate: true, animation: fast }
 
     usrAdmin edgeAdmin@-.->|5601| subAudit
-    edgeAdmin@{ curve: linear, animate: true, animation: fast }
+    edgeAdmin@{ curve: basis, animate: true, animation: fast }
 
     subRegistry edgeConfig@-.->|5000| subAudit
-    edgeConfig@{ curve: linear, animate: true, animation: fast }
+    edgeConfig@{ curve: basis, animate: true, animation: fast }
 
     subMicroservices edgeEureka@==>|8761| subRegistry
     edgeEureka@{ curve: linear, animate: true, animation: fast }
@@ -148,27 +162,35 @@ flowchart
     %% subMicroservices edgeNotification@==> serviceBus
     %% edgeNotification@{ curve: linear, animate: true, animation: fast }
 
+    %% serviceBus edgeServiceBusAll@<-.- srvService1 & srvService2 & srvService3 & srvService4 & srvService5
+    %% edgeServiceBusAll@{ curve: linear, stroke: "#ffb300" }
+
     serviceBus edgeServiceBus@==> srvNotification
     edgeServiceBus@{ curve: linear, animate: true, animation: fast }
 
     srvNotification edgeEmailNotify@==> emailServer
-    edgeEmailNotify@{ curve: linear, animate: true, animation: fast }
+    edgeEmailNotify@{ curve: basis, animate: true, animation: fast }
 
     srvNotification edgeSmsNotify@==> smsProvider
-    edgeSmsNotify@{ curve: linear, animate: true, animation: fast }
+    edgeSmsNotify@{ curve: basis, animate: true, animation: fast }
   end
 
 %% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
+classDef subContainerClass stroke:#555,rx:50,ry:100;
+classDef subInnerContainerClass fill:#fdfdfd,stroke:#555,rx:25,ry:25;
 classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
 classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
 classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
+classDef edgeAnimationClass stroke:#ffb300,stroke-width:2px,stroke-dasharray:9\,5,stroke-dashoffset:900,animation:dash 25s linear infinite;
 
+class subDmz,subNonDmz subContainerClass;
+class subApiGateway,subMicroservices,subRegistry,subAudit subInnerContainerClass;
 class srvService4,srvService5 coreDomainContextClass;
 class srvNotification,srvService3 supportingDomainContextClass;    
-class srvService1Fe,srvService1Fe,srvService2Fe,srvService3Fe,srvService4Fe,srvService5Fe uiClass;
+class mfeService1,mfeService1,mfeService2,mfeService3,mfeService4,mfeService5 uiClass;
+class edgeMfe3 edgeAnimationClass;
 
 %% Adhoc styling
-style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
-
-%% Subgraph Box Styling
 style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
+style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+style firewall fill:#ffe7d7,stroke:#fab88c;
