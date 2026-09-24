@@ -28,7 +28,9 @@ title: "Microservices - Tactical Plan"
   'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
 }}%%
 
-flowchart LR
+flowchart
+  subgraph subMainContainer[" "]
+    direction TD
     endUser@{ shape: sl-rect, label: "👤 End User" }
     internet@{ shape: cloud, label: "Internet" }
     firewall@{ shape: rect, label: "🧱 Firewall" }
@@ -91,6 +93,9 @@ flowchart LR
         usrAdmin@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
     end
 
+    %% Keep firewall over subApiGateway
+    %% firewall ~~~ subDmz
+
     srvReactShell -.-> srvService1Fe
     srvReactShell -.-> srvService2Fe
     srvReactShell -.-> srvService4Fe
@@ -151,15 +156,19 @@ flowchart LR
 
     srvNotification edgeSmsNotify@==> smsProvider
     edgeSmsNotify@{ curve: linear, animate: true, animation: fast }
+  end
 
+%% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
+classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
+classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
+classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
 
-  %% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
-  classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
-  classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
-  classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
-  classDef reactShellClass fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+class srvService4,srvService5 coreDomainContextClass;
+class srvNotification,srvService3 supportingDomainContextClass;    
+class srvService1Fe,srvService1Fe,srvService2Fe,srvService3Fe,srvService4Fe,srvService5Fe uiClass;
 
-  class srvService4,srvService5 coreDomainContextClass;
-  class srvNotification supportingDomainContextClass;    
-  class srvService1Fe,srvService1Fe,srvService2Fe,srvService3Fe,srvService4Fe,srvService5Fe uiClass;
-  class srvReactShell reactShellClass;
+%% Adhoc styling
+style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+
+%% Subgraph Box Styling
+style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
