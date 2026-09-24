@@ -4,47 +4,65 @@ title: "Application Title - DDD: Context Map"
 
 ---
 
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#eaf6f8',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#a3d5dc',
+    'lineColor': '#6fb8c9',
+    'edgeLabelBackground': 'transparent',
+    'fontFamily': 'arial',
+    'mainBkg': '#eaf6f8',
+    'secondBkg': '#d6ecf3',
+    'tertiaryColor': '#f0f9fb',
+    'clusterBkg': '#f5fbfc',
+    'clusterBorder': '#a3d5dc',
+    'background': '#ffffff',
+    'secondaryColor': '#d6ecf3',
+    'tertiaryTextColor': '#000000',
+    'secondaryTextColor': '#000000',
+    'textColor': '#000000',
+    'nodeTextColor': '#000000'
+  },
+  'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+}}%%
+
 flowchart TB
-
-  %%{init: {
-    'theme': 'base',
-    'themeVariables': {
-      'primaryColor': '#eaf6f8',
-      'primaryTextColor': '#000000',
-      'primaryBorderColor': '#a3d5dc',
-      'lineColor': '#6fb8c9',
-      'edgeLabelBackground': 'transparent',
-      'fontFamily': 'arial',
-      'mainBkg': '#eaf6f8',
-      'secondBkg': '#d6ecf3',
-      'tertiaryColor': '#f0f9fb',
-      'clusterBkg': '#f5fbfc',
-      'clusterBorder': '#a3d5dc',
-      'background': '#ffffff',
-      'secondaryColor': '#d6ecf3',
-      'tertiaryTextColor': '#000000',
-      'secondaryTextColor': '#000000',
-      'textColor': '#000000',
-      'nodeTextColor': '#000000'
-    },
-    'themeCSS': '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
-  }}%%
-
   subgraph mainContainer[" "]
     direction TB
-    
-    coreSubdomainContext1(["<b>Core Subdomain</b><br>Context"])
-    supportingSubdomainContext1(["<b>Supporting Subdomain</b><br>Context"])
-    
-    coreSubdomainContext1 --- supportingSubdomainContext1
+        
+    %% Top Node
+    contextC1(["<b>Core Subdomain C1</b><br>Context"])
+
+    %% Middle Layer Nodes
+    contextS1(["<b>Supporting Subdomain S1</b><br>Context"])
+    contextS2(["<b>Supporting Subdomain S2</b><br>Flow Context"])
+    contextS3(["<b>Supporting Subdomain S3</b><br>Context"])
+    contextS4(["<b>Supporting Subdomain S4</b><br>Context"])
+
+    %% Bottom Node
+    contextC2(["<b>Core Subdomain C2</b><br>Context"])
+
+    %% Connections from contextC1
+    contextC1 --- contextS1
+    contextC1 --- contextS2
+    contextC1 --- contextS3
+    contextC1 --- contextS4
+
+    %% Connections to contextC2
+    contextS1 --- contextC2
+    contextS2 --- contextC2
+    contextS3 --- contextC2
+    contextS4 --- contextC2
   end
 
-  %% Node Styling (Blue dashed ellipses for Top/Bottom, Green dashed for Middle)
+  %% Node Styling (Blue dashed ellipses for Core Domain, Green dashed for Supporting Domain)
   classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
   classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
   
-  class coreSubdomainContext1 coreDomainContextClass;
-  class supportingSubdomainContext1 supportingDomainContextClass;
+  class contextC1,contextC2 coreDomainContextClass;
+  class contextS1,contextS2,contextS3,contextS4 supportingDomainContextClass;
 
   %% Subgraph Box Styling
   style mainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
