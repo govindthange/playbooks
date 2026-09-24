@@ -29,12 +29,12 @@ flowchart
   subgraph subMainContainer[" "]
     direction TD
     endUser@{ shape: sl-rect, label: "👤 End User" }
-    internet@{ shape: cloud, label: "Internet" }
+    internet@{ shape: cloud, label: "I  N  T  E  R  N  E  T" }
     firewall@{ shape: rect, label: "🧱 Firewall" }
 
     subgraph subDmz [DMZ]
         systemUser@{ shape: sl-rect, label: "👤 System User" }
-        ldap@{ shape: cloud, label: "🪪 LDAP" }
+        ldap@{ shape: bow-rect, label: "🪪 LDAP" }
         
         subgraph subApiGateway [🌐 API Gateway]
             srvReactShell@{ shape: rect, label: "⚛️ React Shell" }
@@ -71,11 +71,11 @@ flowchart
             srvService5@{ shape: hex, label: "📦 Microservice 5" }
             mfeService5 --- srvService5
             
-            srvNotification@{ shape: hex, label: "🔔 Notification Microservice" }
-            serviceBus@{ shape: h-cyl, label: "📯 Service Bus (Queues)" }
+            srvNotification@{ shape: hex, label: "🔔 Notification Microservice (Events Consumer)" }
+            eventsBus@{ shape: h-cyl, label: "📯 Events Bus (Queues)" }
         end
         
-        dbOracle@{ shape: cyl, label: "Oracle DB" }
+        databaseStorage@{ shape: lin-cyl, label: "Database Server" }
         fileStorage@{ shape: lin-doc, label: "🗄️ File Storage" }
     
         smsProvider@{ shape: rect, label: "📱 SMS Provider" }
@@ -87,7 +87,7 @@ flowchart
             logKibana@{ shape: rect, label: "📈 Kibana" }
         end
 
-        usrAdmin@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+        adminUser@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
     end
 
     %% Keep firewall over subApiGateway
@@ -128,8 +128,8 @@ flowchart
     ldap edgeLdap@-.- srvAccessControl
     edgeLdap@{ curve: linear }
 
-    systemUser edgeSidbi@-->|443| subApiGateway
-    edgeSidbi@{ curve: linear }
+    systemUser edgeSysUser@-->|443| subApiGateway
+    edgeSysUser@{ curve: linear }
     
     subApiGateway edgeMicro@==>|8080...| subMicroservices
     edgeMicro@{ curve: linear, animate: true, animation: fast }
@@ -137,7 +137,7 @@ flowchart
     subApiGateway edgeRegistry@==>|8761| subRegistry
     edgeRegistry@{ curve: linear, animate: true, animation: fast }
 
-    srvService4 edgeDb1@==> dbOracle
+    srvService4 edgeDb1@==> databaseStorage
     edgeDb1@{ curve: linear, animate: true, animation: fast }
 
     srvService5 edgeDb2@==> fileStorage
@@ -149,7 +149,7 @@ flowchart
     logLogstash edgeLog@--> |9200| logElastic
     edgeLog@{ curve: linear, animate: true, animation: fast }
 
-    usrAdmin edgeAdmin@-.->|5601| subAudit
+    adminUser edgeAdmin@-.->|5601| subAudit
     edgeAdmin@{ curve: basis, animate: true, animation: fast }
 
     subRegistry edgeConfig@-.->|5000| subAudit
@@ -159,14 +159,14 @@ flowchart
     edgeEureka@{ curve: linear, animate: true, animation: fast }
 
     %% Notification / External Integrations matching reference layout
-    %% subMicroservices edgeNotification@==> serviceBus
+    %% subMicroservices edgeNotification@==> eventsBus
     %% edgeNotification@{ curve: linear, animate: true, animation: fast }
 
-    %% serviceBus edgeServiceBusAll@<-.- srvService1 & srvService2 & srvService3 & srvService4 & srvService5
-    %% edgeServiceBusAll@{ curve: linear, stroke: "#ffb300" }
+    %% eventsBus edgeEventsBusAll@<-.- srvService1 & srvService2 & srvService3 & srvService4 & srvService5
+    %% edgeEventsBusAll@{ curve: linear, stroke: "#ffb300" }
 
-    serviceBus edgeServiceBus@==> srvNotification
-    edgeServiceBus@{ curve: linear, animate: true, animation: fast }
+    eventsBus edgeEventsBus@--> srvNotification
+    edgeEventsBus@{ curve: linear, animate: true, animation: fast }
 
     srvNotification edgeEmailNotify@==> emailServer
     edgeEmailNotify@{ curve: basis, animate: true, animation: fast }
@@ -182,6 +182,8 @@ classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 
 classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
 classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
 classDef edgeAnimationClass stroke:#ffb300,stroke-width:2px,stroke-dasharray:9\,5,stroke-dashoffset:900,animation:dash 25s linear infinite;
+classDef userClass fill:#A3E2F0,stroke:#a3d5dc,stroke-width:2px,color:#000000;
+classDef systemClass fill:#b2dfdb,stroke:#666666,stroke-width:2px;
 
 class subDmz,subNonDmz subContainerClass;
 class subApiGateway,subMicroservices,subRegistry,subAudit subInnerContainerClass;
@@ -189,8 +191,11 @@ class srvService4,srvService5 coreDomainContextClass;
 class srvNotification,srvService3 supportingDomainContextClass;    
 class mfeService1,mfeService1,mfeService2,mfeService3,mfeService4,mfeService5 uiClass;
 class edgeMfe3 edgeAnimationClass;
+class endUser,systemUser,adminUser userClass;
+class databaseStorage,fileStorage,emailServer,smsProvider,eventsBus systemClass;
 
 %% Adhoc styling
 style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
 style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
-style firewall fill:#ffe7d7,stroke:#fab88c;
+style firewall fill:#ffe7d7,stroke:#fab88c,stroke-width:8px;
+style internet stroke:#666666,stroke-width:2px;
