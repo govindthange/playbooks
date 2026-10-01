@@ -1,0 +1,264 @@
+---
+title: "Microservices - Tactical Plan"
+config:
+  flowchart:
+    curve:basis
+  theme: base
+  themeVariables:
+    primaryColor: '#eaf6f8'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#a3d5dc'
+    lineColor: '#6fb8c9'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'arial'
+    mainBkg: '#eaf6f8'
+    secondBkg: '#d6ecf3'
+    tertiaryColor: '#f0f9fb'
+    clusterBkg: '#f5fbfc'
+    clusterBorder: '#a3d5dc'
+    background: '#ffffff'
+    secondaryColor: '#d6ecf3'
+    tertiaryTextColor: '#000000'
+    secondaryTextColor: '#000000'
+    textColor: '#000000'
+    nodeTextColor: '#000000'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+---
+
+flowchart
+  subgraph subMainContainer[" "]
+    direction LR
+    endUser@{ shape: sl-rect, label: "👤 End User" }
+    internet@{ shape: cloud, label: "I  N  T  E  R  N  E  T" }
+    firewall@{ shape: rect, label: "🧱 Firewall" }
+  
+    smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+    emailServer@{ shape: rect, label: "✉️ Email Server" }  
+
+    subgraph subDmz ["DMZ / Edge Cluster"]
+      systemUser@{ shape: sl-rect, label: "👤 System User" }
+      ldap@{ shape: bow-rect, label: "🪪 LDAP" }
+      
+      subgraph subApiGateway ["🌐 Ingress & API Gateway"]
+          srvReactShell@{ shape: rect, label: "⚛️ React Shell" }
+          ingressController@{ shape: rect, label: "🚦 K8s Ingress / Gateway API" }
+          srvAccessControl@{ shape: rect, label: "🛡 Access Control / AuthSidecar" }
+      end
+      subgraph subExternalAccess ["External Access"]
+          direction TD
+          endUser@{ shape: rect, label: "End User (Web/Mobile)" }
+          extLoadBalancer@{ shape: rect, label: "External LoadBalancer" }
+          adminKubectl@{ shape: rect, label: "Admin (kubectl)" }
+          
+          endUser -->|HTTP/HTTPS| extLoadBalancer
+      end
+    end
+
+    subgraph subNonDmz ["Kubernetes Cluster (Non DMZ)"]
+      cloudProvider@{ shape: rect, label: "Cloud Provider" }
+
+      subgraph subControlPlane ["Control Plane"]
+          controllerManager@{ shape: rect, label: "Controller Manager" }
+          scheduler@{ shape: rect, label: "Scheduler" }
+          apiServer@{ shape: rect, label: "API Server" }
+          etcdStorage@{ shape: h-cyl, label: "etcd" }
+          cloudControllerManager@{ shape: rect, label: "Cloud Controller Manager" }
+
+          controllerManager -.->|Handles Replicas, Endpoints, etc.| apiServer
+          apiServer -.->|Sends controller requests| controllerManager
+          scheduler -.->|Schedules Pods to Nodes| apiServer
+          apiServer -.->|Sends scheduling requests| scheduler
+          apiServer -->|Stores cluster state| etcdStorage
+          cloudControllerManager -.->|Manages cloud-specific control logic| apiServer
+          apiServer -.->|Sends cloud resource requests| cloudControllerManager
+      end
+
+      subgraph subMicroservices ["Microservices (1 Pod per Service)"]
+        subgraph subWorkerNode1 ["Worker Node 1"]
+            kubelet1@{ shape: rect, label: "Kubelet" }
+            containerRuntime1@{ shape: rect, label: "Container Runtime" }
+            ingressController1@{ shape: rect, label: "Ingress Controller" }
+            service1@{ shape: rect, label: "Service" }
+            subgraph podA1 ["Pod (App A)"]
+              subgraph containersA1["Container"]
+                mfeService1@{ shape: curv-trap, label: "🧩 Microfrontend 1" }
+                srvService1@{ shape: hex, label: "📦 Service 1 Container" }
+                mfeService1 --- srvService1
+              end
+            end
+            subgraph podB1 ["Pod (App B)"]
+              subgraph containersB1["Container"]
+                mfeService2@{ shape: curv-trap, label: "🧩 Microfrontend 2" }
+                srvService2@{ shape: hex, label: "📦 Service 2 Container" }
+                mfeService2 --- srvService2
+              end
+            end
+            kubeProxy1@{ shape: rect, label: "Kube-Proxy" }
+
+            kubelet1 -->|Manages| containerRuntime1
+            ingressController1 -->|Routes traffic to| service1
+            service1 -.->|Forwards to| podA1
+            service1 -.->|Forwards to| podB1
+        end
+
+        subgraph subWorkerNode2 ["Worker Node 2"]
+            kubelet2@{ shape: rect, label: "Kubelet" }
+            containerRuntime2@{ shape: rect, label: "Container Runtime" }
+            subgraph podA2 ["Pod (App A)"]
+              subgraph containersA2["Container"]
+                mfeService3@{ shape: curv-trap, label: "🧩 Microfrontend 3" }
+                srvService3@{ shape: hex, label: "📦 Service 3 Container" }
+                mfeService3 --- srvService3
+              end
+            end
+            subgraph podB2 ["Pod (App B)"]
+              subgraph containersB2["Container"]
+                mfeService4@{ shape: curv-trap, label: "🧩 Microfrontend 4" }
+                srvService4@{ shape: hex, label: "📦 Service 4 Container" }
+                mfeService4 --- srvService4
+              end
+            end
+            kubeProxy2@{ shape: rect, label: "Kube-Proxy" }
+
+            kubelet2 -->|Manages| containerRuntime2
+        end
+
+        subgraph subWorkerNode3 ["Worker Node 3"]
+            kubelet3@{ shape: rect, label: "Kubelet" }
+            containerRuntime3@{ shape: rect, label: "Container Runtime" }
+            subgraph subPodNotif ["Notification Pod"]
+              subgraph containersA3["Container"]
+                srvNotification@{ shape: hex, label: "🔔 Notification Service" }
+              end
+            end
+            eventsBus@{ shape: h-cyl, label: "📯 Message Broker / Event Mesh" }
+            kubeProxy3@{ shape: rect, label: "Kube-Proxy" }
+
+            kubelet3 -->|Manages| containerRuntime3
+        end      
+      end
+
+      databaseStorage@{ shape: lin-cyl, label: "Database Server" }
+      fileStorage@{ shape: lin-doc, label: "🗄️ File Storage" }
+
+      subgraph subAudit ["Observability / Logging"]
+          logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
+          logLogstash@{ shape: rect, label: "📥 FluentBit / Logstash" }
+          logKibana@{ shape: rect, label: "📈 Kibana" }
+      end
+
+      adminUser@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+    end
+
+    subWorkerNode3 ~~~ subWorkderNode2
+
+    %% External Access Routing
+    extLoadBalancer -.-|Routes to| ingressController1
+    service1 -.-|Forwards to| podA2
+    service1 -.-|Forwards to| podB2
+    adminKubectl -.-|kubectl| apiServer
+
+    %% Worker Node 1 Connections to Control Plane
+    kubelet1 -.-|Reports status| apiServer
+    kubeProxy1 -.-|Applies| apiServer
+
+    %% Worker Node 2 Connections to Control Plane
+    kubelet2 -.-|Reports status| apiServer
+    kubeProxy2 -.-|Applies| apiServer
+
+    %% External Cloud Provider Connections
+    cloudProvider -.->|Integration| cloudControllerManager
+
+    %% ===========
+
+    endUser edgeWeb@--- internet
+    edgeWeb@{ curve: linear }
+
+    internet edgeFirewall@==> |443| firewall
+    edgeFirewall@{ curve: linear, animate: true, animation: slow }
+
+    firewall edgeGateway@==> subDmz
+    edgeGateway@{ curve: linear, animate: true, animation: slow }
+
+    ldap edgeLdap@-.- srvAccessControl
+    edgeLdap@{ curve: linear }
+
+    systemUser edgeSysUser@-->|443| subApiGateway
+    edgeSysUser@{ curve: linear }
+    
+    subApiGateway edgeMicro@==>|8080...| subMicroservices
+    edgeMicro@{ curve: linear, animate: true, animation: fast }
+
+    srvService4 edgeDb1@==> databaseStorage
+    edgeDb1@{ curve: linear, animate: true, animation: fast }
+
+    srvService3 edgeDb2@==> fileStorage
+    edgeDb2@{ curve: linear, animate: true, animation: fast }
+
+    subMicroservices edgeAudit@==>|5000| subAudit
+    edgeAudit@{ curve: linear, animate: true, animation: fast }
+
+    logLogstash edgeLog@--> |9200| logElastic
+    edgeLog@{ curve: linear, animate: true, animation: fast }
+
+    adminUser edgeAdmin@-.->|5601| subAudit
+    edgeAdmin@{ curve: basis, animate: true, animation: fast }
+
+    subControlPlane edgeConfig@-.->|5000| subAudit
+    edgeConfig@{ curve: basis, animate: true, animation: fast }
+
+    subMicroservices edgeCoreDns@==>|53| subControlPlane
+    edgeCoreDns@{ curve: linear, animate: true, animation: fast }
+
+    eventsBus edgeEventsBus@--> srvNotification
+    edgeEventsBus@{ curve: linear, animate: true, animation: fast }
+
+    srvNotification edgeEmailNotify@==> emailServer
+    edgeEmailNotify@{ curve: basis, animate: true, animation: fast }
+
+    srvNotification edgeSmsNotify@==> smsProvider
+    edgeSmsNotify@{ curve: basis, animate: true, animation: fast }
+
+    %% =========
+  end
+
+%% Styling & Classes
+classDef redBorderNode fill:#ffffff,stroke:#e05263,stroke-width:2px,color:#000000;
+classDef blueBorderNode fill:#ffffff,stroke:#4a7bb0,stroke-width:2px,color:#000000;
+classDef subContainerClass fill:#ffffff,stroke:#4a7bb0,stroke-width:2px;
+
+class endUser,adminKubectl,ingressController1,containersA1,containersB1,containersA2,containersB2,controllerManager,scheduler,cloudControllerManager redBorderNode;
+class extLoadBalancer,kubelet1,containerRuntime1,service1,kubeProxy1,kubelet2,containerRuntime2,kubeProxy2,apiServer,cloudProvider blueBorderNode;
+
+class subExternalAccess,subWorkerNode1,subWorkerNode2,subControlPlane subContainerClass;
+
+style etcdStorage fill:#ffd54f,stroke:#ffb300,stroke-width:2px;
+
+
+
+
+
+%% Node Styling
+classDef subContainerClass stroke:#555,rx:50,ry:100;
+classDef subInnerContainerClass fill:#fdfdfd,stroke:#555,rx:25,ry:25;
+classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
+classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
+classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
+classDef edgeAnimationClass stroke:#ffb300,stroke-width:2px,stroke-dasharray:9\,5,stroke-dashoffset:900,animation:dash 25s linear infinite;
+classDef userClass fill:#A3E2F0,stroke:#a3d5dc,stroke-width:2px,color:#000000;
+classDef systemClass fill:#b2dfdb,stroke:#666666,stroke-width:2px;
+
+class subDmz,subNonDmz subContainerClass;
+class subApiGateway,subMicroservices,subControlPlane,subAudit subInnerContainerClass;
+class srvService4,srvService5 coreDomainContextClass;
+class srvNotification,srvService3 supportingDomainContextClass;    
+class mfeService1,mfeService2,mfeService3,mfeService4,mfeService5 uiClass;
+class edgeMfe3 edgeAnimationClass;
+class endUser,systemUser,adminUser userClass;
+class databaseStorage,fileStorage,emailServer,smsProvider,eventsBus,subPod1,subPod2,subPod3,subPod4,subPod5,subPodNotif systemClass;
+
+%% Adhoc styling
+style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
+style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
+style firewall fill:#ffe7d7,stroke:#fab88c,stroke-width:8px;
+style internet stroke:#666666,stroke-width:2px;

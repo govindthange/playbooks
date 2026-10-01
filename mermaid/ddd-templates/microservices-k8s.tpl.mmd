@@ -1,0 +1,132 @@
+---
+title: "Microservices - Tactical Plan"
+config:
+  flowchart:
+    curve:basis
+  theme: base
+  themeVariables:
+    primaryColor: '#eaf6f8'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#a3d5dc'
+    lineColor: '#6fb8c9'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'arial'
+    mainBkg: '#eaf6f8'
+    secondBkg: '#d6ecf3'
+    tertiaryColor: '#f0f9fb'
+    clusterBkg: '#f5fbfc'
+    clusterBorder: '#a3d5dc'
+    background: '#ffffff'
+    secondaryColor: '#d6ecf3'
+    tertiaryTextColor: '#000000'
+    secondaryTextColor: '#000000'
+    textColor: '#000000'
+    nodeTextColor: '#000000'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4d4d4d !important; fill: #4d4d4d !important; }'
+---
+
+flowchart LR
+    subgraph subExternalAccess ["External Access"]
+        direction TD
+        endUser@{ shape: rect, label: "End User (Web/Mobile)" }
+        extLoadBalancer@{ shape: rect, label: "External LoadBalancer" }
+        adminKubectl@{ shape: rect, label: "Admin (kubectl)" }
+        
+        endUser -->|HTTP/HTTPS| extLoadBalancer
+    end
+
+    subgraph subWorkerNode1 ["Worker Node 1"]
+        kubelet1@{ shape: rect, label: "Kubelet" }
+        containerRuntime1@{ shape: rect, label: "Container Runtime" }
+        ingressController1@{ shape: rect, label: "Ingress Controller" }
+        service1@{ shape: rect, label: "Service" }
+        subgraph podA1 ["Pod (App A)"]
+          subgraph containersA1["Container"]
+            mfeService1@{ shape: curv-trap, label: "🧩 Microfrontend 1" }
+            srvService1@{ shape: hex, label: "📦 Service 1 Container" }
+            mfeService1 --- srvService1
+          end
+        end
+        subgraph podB1 ["Pod (App B)"]
+          subgraph containersB1["Container"]
+            mfeService2@{ shape: curv-trap, label: "🧩 Microfrontend 2" }
+            srvService2@{ shape: hex, label: "📦 Service 2 Container" }
+            mfeService2 --- srvService2
+          end
+        end
+        kubeProxy1@{ shape: rect, label: "Kube-Proxy" }
+
+        kubelet1 -->|Manages| containerRuntime1
+        ingressController1 -->|Routes traffic to| service1
+        service1 -.->|Forwards to| podA1
+        service1 -.->|Forwards to| podB1
+    end
+
+    subgraph subWorkerNode2 ["Worker Node 2"]
+        kubelet2@{ shape: rect, label: "Kubelet" }
+        containerRuntime2@{ shape: rect, label: "Container Runtime" }
+        subgraph podA2 ["Pod (App A)"]
+          subgraph containersA2["Container"]
+            mfeService3@{ shape: curv-trap, label: "🧩 Microfrontend 3" }
+            srvService3@{ shape: hex, label: "📦 Service 3 Container" }
+            mfeService3 --- srvService3
+          end
+        end
+        subgraph podB2 ["Pod (App B)"]
+          subgraph containersB2["Container"]
+            mfeService4@{ shape: curv-trap, label: "🧩 Microfrontend 4" }
+            srvService4@{ shape: hex, label: "📦 Service 4 Container" }
+            mfeService4 --- srvService4
+          end
+        end
+        kubeProxy2@{ shape: rect, label: "Kube-Proxy" }
+
+        kubelet2 -->|Manages| containerRuntime2
+    end
+
+    cloudProvider@{ shape: rect, label: "Cloud Provider" }
+
+    subgraph subControlPlane ["Control Plane"]
+        controllerManager@{ shape: rect, label: "Controller Manager" }
+        scheduler@{ shape: rect, label: "Scheduler" }
+        apiServer@{ shape: rect, label: "API Server" }
+        etcdStorage@{ shape: h-cyl, label: "etcd" }
+        cloudControllerManager@{ shape: rect, label: "Cloud Controller Manager" }
+
+        controllerManager -.->|Handles Replicas, Endpoints, etc.| apiServer
+        apiServer -.->|Sends controller requests| controllerManager
+        scheduler -.->|Schedules Pods to Nodes| apiServer
+        apiServer -.->|Sends scheduling requests| scheduler
+        apiServer -->|Stores cluster state| etcdStorage
+        cloudControllerManager -.->|Manages cloud-specific control logic| apiServer
+        apiServer -.->|Sends cloud resource requests| cloudControllerManager
+    end
+
+    %% External Access Routing
+    extLoadBalancer -.-|Routes to| ingressController1
+    service1 -.-|Forwards to| podA2
+    service1 -.-|Forwards to| podB2
+    adminKubectl -.-|kubectl| apiServer
+
+    %% Worker Node 1 Connections to Control Plane
+    kubelet1 -.-|Reports status| apiServer
+    kubeProxy1 -.-|Applies| apiServer
+
+    %% Worker Node 2 Connections to Control Plane
+    kubelet2 -.-|Reports status| apiServer
+    kubeProxy2 -.-|Applies| apiServer
+
+    %% External Cloud Provider Connections
+    cloudProvider -.->|Integration| cloudControllerManager
+
+%% Styling & Classes
+classDef redBorderNode fill:#ffffff,stroke:#e05263,stroke-width:2px,color:#000000;
+classDef blueBorderNode fill:#ffffff,stroke:#4a7bb0,stroke-width:2px,color:#000000;
+classDef subContainerClass fill:#ffffff,stroke:#4a7bb0,stroke-width:2px;
+
+class endUser,adminKubectl,ingressController1,podA1,podB1,containersA1,containersB1,podA2,podB2,containersA2,containersB2,controllerManager,scheduler,cloudControllerManager redBorderNode;
+class extLoadBalancer,kubelet1,containerRuntime1,service1,kubeProxy1,kubelet2,containerRuntime2,kubeProxy2,apiServer,cloudProvider blueBorderNode;
+
+class subExternalAccess,subWorkerNode1,subWorkerNode2,subControlPlane subContainerClass;
+
+style etcdStorage fill:#ffd54f,stroke:#ffb300,stroke-width:2px;
