@@ -119,18 +119,18 @@ flowchart
         subgraph subWorkerNode3 ["Worker Node 3"]
           kubelet3@{ shape: rect, label: "Kubelet" }
           containerRuntime3@{ shape: rect, label: "Container Runtime" }
-          subgraph subPodNotif ["Notification Pod"]
+          subgraph podNotification ["Notification Pod"]
             subgraph containersA3["Container"]
               srvNotification@{ shape: hex, label: "🔔 Notification Service" }
             end
           end
           eventsBus@{ shape: h-cyl, label: "📯 Message Broker / Event Mesh" }
           kubeProxy3@{ shape: rect, label: "Kube-Proxy" }
-          smsProvider@{ shape: rect, label: "📱 SMS Provider" }
-          emailServer@{ shape: rect, label: "✉️ Email Server" } 
           kubelet3 -->|Manages| containerRuntime3
         end
 
+        smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+        emailServer@{ shape: rect, label: "✉️ Email Server" }
         databaseStorage@{ shape: lin-cyl, label: "Database Server" }
         fileStorage@{ shape: lin-doc, label: "🗄️ File Storage" }   
       end
@@ -160,16 +160,21 @@ flowchart
 
     %% Worker Node 1 Connections to Control Plane
     kubelet1 edgekubeletToApiServer@-.-|Reports status| apiServer
-    edgekubeletToApiServer@{ curve: basis, animate: true, animation: slow }
-
+    edgekubeletToApiServer@{ curve: basis, animate: true, animation: fast }
     kubeProxy1 edgekubeProxy1ToApiServer@-.-|Applies| apiServer
-    edgekubeProxy1ToApiServer@{ curve: basis, animate: true, animation: slow }
+    edgekubeProxy1ToApiServer@{ curve: basis, animate: true, animation: fast }
 
     %% Worker Node 2 Connections to Control Plane
     kubelet2 edgekubelet2ToApiServer@-.-|Reports status| apiServer
-    edgekubelet2ToApiServer@{ curve: linear, animate: true, animation: slow }
+    edgekubelet2ToApiServer@{ curve: linear, animate: true, animation: fast }
     kubeProxy2 edgekubeProxy2@-.-|Applies| apiServer
-    edgekubeProxy2@{ curve: linear, animate: true, animation: slow }
+    edgekubeProxy2@{ curve: linear, animate: true, animation: fast }
+
+    %% Worker Node 3 Connections to Control Plane
+    kubelet3 edgekubelet3ToApiServer@-.-|Reports status| apiServer
+    edgekubelet3ToApiServer@{ curve: linear, animate: true, animation: fast }
+    kubeProxy3 edgekubeProxy3@-.-|Applies| apiServer
+    edgekubeProxy3@{ curve: linear, animate: true, animation: fast }
 
     %% External Cloud Provider Connections
     cloudProvider edgeCloudProvider@==>|Integration| cloudControllerManager
@@ -229,10 +234,10 @@ classDef redBorderNode fill:#ffffff,stroke:#e05263,stroke-width:2px,color:#00000
 classDef blueBorderNode fill:#ffffff,stroke:#4a7bb0,stroke-width:2px,color:#000000;
 classDef subContainerClass fill:#ffffff,stroke:#4a7bb0,stroke-width:2px;
 
-class endUser,adminKubectl,ingressController,containersA1,containersB1,containersA2,containersB2,controllerManager,scheduler,cloudControllerManager redBorderNode;
+class containersA1,containersB1,containersA2,containersB2,containersA3 redBorderNode;
 class extLoadBalancer,kubelet1,containerRuntime1,service1,kubeProxy1,kubelet2,containerRuntime2,kubeProxy2,apiServer,cloudProvider blueBorderNode;
 
-class subWorkerNode1,subWorkerNode2,subControlPlane subContainerClass;
+class subWorkerNode1,subWorkerNode2,subWorkerNode3,subControlPlane subContainerClass;
 
 %% Node Styling
 classDef subContainerClass stroke:#555,rx:50,ry:100;
@@ -240,23 +245,22 @@ classDef subInnerContainerClass fill:#fdfdfd,stroke:#555,rx:25,ry:25;
 classDef coreDomainContextClass fill:#dce6f8,stroke:#4a7bb0,stroke-dasharray: 4 4,stroke-width:2px;
 classDef supportingDomainContextClass fill:#d3edd9,stroke:#48a05b,stroke-dasharray: 4 4,stroke-width:2px;
 classDef uiClass fill:#FFFCD1,stroke:#ffe082,stroke-width:2px,color:#000000;
-classDef edgeAnimationClass stroke:#ffb300,stroke-width:2px,stroke-dasharray:9\,5,stroke-dashoffset:900,animation:dash 25s linear infinite;
 classDef userClass fill:#A3E2F0,stroke:#a3d5dc,stroke-width:2px,color:#000000;
 classDef systemClass fill:#b2dfdb,stroke:#666666,stroke-width:2px;
-classDef k8sClass fill:#DBFBFF,stroke:#d6d8db,stroke-width:2px,color:#000000;
+classDef k8sClass fill:#DBFBFF,stroke:#4a7bb0,stroke-width:2px,color:#000000;
 
 class subDmz,subNonDmz subContainerClass;
 class subApiGateway,subMicroservices,subControlPlane,subAudit subInnerContainerClass;
 class srvService1,srvService4 coreDomainContextClass;
 class srvNotification,srvService3 supportingDomainContextClass;    
 class mfeService1,mfeService2,mfeService3,mfeService4 uiClass;
-class edgeMfe3 edgeAnimationClass;
 class endUser,systemUser,adminUser userClass;
-class databaseStorage,fileStorage,emailServer,smsProvider,eventsBus,subPod1,subPod2,subPod3,subPod4,subPod5,subPodNotif systemClass;
+class eventsBus,databaseStorage,fileStorage,emailServer,smsProvider systemClass;
 class adminKubectl,cloudProvider,controllerManager,apiServer,scheduler,cloudControllerManager,etcdStorage,ingressController,kubelet1,kubelet2,kubelet3,kubelet4,service1,containerRuntime1,containerRuntime2,containerRuntime3,containerRuntime4,kubeProxy1,kubeProxy2,kubeProxy3,kubeProxy4 k8sClass;
 
 %% Adhoc styling
-style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
+style subMainContainer fill:#fff,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
 style srvReactShell fill:#ffe082,stroke:#ffb300,stroke-width:2px;
 style firewall fill:#ffe7d7,stroke:#fab88c,stroke-width:8px;
 style internet stroke:#666666,stroke-width:2px;
+style subControlPlane fill:#fff,stroke:#4a7bb0;
