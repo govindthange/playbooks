@@ -27,9 +27,11 @@ config:
 
 flowchart TB
     subgraph mainContainer[" "]
+        direction LR
         
         %% Core Domain
         subgraph coreDomain["Core Domain"]
+            direction TB
             
             subgraph coreSubdomain1["Subdomain #1"]
                 coreSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
