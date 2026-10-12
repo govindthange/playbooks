@@ -25,15 +25,16 @@ config:
   themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #8B949E !important; fill: #8B949E !important; }'
 ---
 
-flowchart TB
+flowchart
     subgraph mainContainer[" "]
         direction LR
         
         %% Core Domain
         subgraph coreDomain["Core Domain"]
-            direction TB
+            direction LR
             
             subgraph coreSubdomain1["Subdomain #1"]
+                direction TB
                 coreSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
                 coreSubdomain1Aspect2(["Subdomain 1, Aspect 2"])
                 coreSubdomain1Aspect3(["Subdomain 1, Aspect 3"])
@@ -53,6 +54,7 @@ flowchart TB
         
         %% Generic Domain
         subgraph genericDomain["Generic Domain"]
+            direction LR
             genericAuthNZ(["❶ Role Based Security<br>(AuthN / AuthZ)"])
             genericHealthMonitoring(["❶ Health/Monitoring"])
             genericAuditLogs(["❶ Audit/Logs"])
@@ -61,6 +63,7 @@ flowchart TB
         
         %% Supporting Domain
         subgraph supportingDomain["Supporting Domain"]
+            direction LR
             
             subgraph supportingSubdomain1["Subdomain #1"]
                 supportingSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
