@@ -1,0 +1,186 @@
+---
+title: "Microservices - Tactical Plan"
+config:
+  flowchart:
+    curve: basis
+  theme: base
+  themeVariables:
+    primaryColor: '#1F2937'
+    primaryTextColor: '#FFFFFF'
+    primaryBorderColor: '#374151'
+    lineColor: '#00E5FF'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'Inter, system-ui, sans-serif'
+    mainBkg: '#0D1117'
+    secondBkg: '#161B22'
+    tertiaryColor: '#21262D'
+    clusterBkg: '#161B22'
+    clusterBorder: '#30363D'
+    background: '#0D1117'
+    secondaryColor: '#21262D'
+    tertiaryTextColor: '#FFFFFF'
+    secondaryTextColor: '#FFFFFF'
+    textColor: '#FFFFFF'
+    nodeTextColor: '#FFFFFF'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #8B949E !important; fill: #8B949E !important; }'
+---
+
+flowchart
+  subgraph mainContainer[" "]
+    direction TD
+    endUser@{ shape: sl-rect, label: "👤 End User" }
+    internet@{ shape: cloud, label: "I  N  T  E  R  N  E  T" }
+    firewall@{ shape: rect, label: "🧱 Firewall" }
+
+    subgraph dmz [DMZ]
+        systemUser@{ shape: sl-rect, label: "👤 System User" }
+        ldap@{ shape: bow-rect, label: "🪪 LDAP" }
+        
+        subgraph apiGatewayContainer [🌐 API Gateway]
+            srvReactShell@{ shape: rect, label: "⚛️ React Shell" }
+            srvZuul@{ shape: rect, label: "🔀 Zuul / Ribbon" }
+            srvAccessControl@{ shape: rect, label: "🛡 Access Control" }
+        end
+    end
+
+    subgraph nonDmz [Non DMZ]
+        subgraph registryContainer [Registry]
+            direction LR
+            srvEureka@{ shape: rect, label: "🧭 Eureka Server" }
+            srvConfig@{ shape: rect, label: "🔧 Config Server" }
+        end
+
+        subgraph microservicesContainer ["Microservices (1..n)"]
+            mfeService1@{ shape: curv-trap, label: "🧩 Microfrontend 1" }
+            msService1@{ shape: hex, label: "📦 Microservice 1" }
+            mfeService1 mfeEdgeMfeService1@--- msService1
+            
+            mfeService2@{ shape: curv-trap, label: "🧩 Microfrontend 2" }
+            msService2@{ shape: hex, label: "📦 Microservice 2" }
+            mfeService2 mfeEdgeMfeService2@--- msService2
+            
+            mfeService4@{ shape: curv-trap, label: "🧩 Microfrontend 4" }
+            msService4@{ shape: hex, label: "📦 Microservice 4" }
+            mfeService4 mfeEdgeMfeService4@--- msService4
+            
+            mfeService3@{ shape: curv-trap, label: "🧩 Microfrontend 3" }
+            msService3@{ shape: hex, label: "📦 Microservice 3" }
+            mfeService3 mfeEdgeMfeService3@--- msService3
+            
+            mfeService5@{ shape: curv-trap, label: "🧩 Microfrontend 5" }
+            msService5@{ shape: hex, label: "📦 Microservice 5" }
+            mfeService5 mfeEdgeMfeService5@--- msService5
+            
+            msNotifier@{ shape: hex, label: "🔔 Notification Microservice (Events Consumer)" }
+            eventsBus@{ shape: h-cyl, label: "📯 Events Bus (Queues)" }
+        end
+        
+        database@{ shape: lin-cyl, label: "Database Server" }
+        fileStorage@{ shape: lin-doc, label: "🗄️ File Storage" }
+    
+        smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+        emailServer@{ shape: rect, label: "✉️ Email Server" }
+
+        subgraph auditContainer [Audit / Log]
+            logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
+            logLogstash@{ shape: rect, label: "📥 Logstash" }
+            logKibana@{ shape: rect, label: "📈 Kibana" }
+        end
+
+        adminUser@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+    end
+
+    %% Individual animated and styled React Shell connections
+    srvReactShell edgeUi1@-.-> mfeService1
+    edgeUi1@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi2@-.-> mfeService2
+    edgeUi2@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi3@-.-> mfeService4
+    edgeUi3@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi4@-.-> mfeService3
+    edgeUi4@{ curve: basis, animate: true, animation: fast }
+
+    srvReactShell edgeUi5@-.-> mfeService5
+    edgeUi5@{ curve: basis, animate: true, animation: fast }
+
+    endUser edgeWeb@--- internet
+    edgeWeb@{ curve: linear }
+
+    internet edgeFirewall@==> |443| firewall
+    edgeFirewall@{ curve: linear, animate: true, animation: slow }
+
+    firewall edgeGateway@==> dmz
+    edgeGateway@{ curve: linear, animate: true, animation: slow }
+
+    ldap edgeLdap@-.- srvAccessControl
+    edgeLdap@{ curve: linear }
+
+    systemUser edgeSysUser@-->|443| apiGatewayContainer
+    edgeSysUser@{ curve: linear }
+    
+    apiGatewayContainer edgeMicro@==>|8080...| microservicesContainer
+    edgeMicro@{ curve: linear, animate: true, animation: fast }
+
+    apiGatewayContainer edgeRegistry@==>|8761| registryContainer
+    edgeRegistry@{ curve: linear, animate: true, animation: fast }
+
+    msService4 edgeDb1@==> database
+    edgeDb1@{ curve: linear, animate: true, animation: fast }
+
+    msService5 edgeDb2@==> fileStorage
+    edgeDb2@{ curve: linear, animate: true, animation: fast }
+
+    microservicesContainer edgeAudit@==>|5000| auditContainer
+    edgeAudit@{ curve: linear, animate: true, animation: fast }
+
+    logLogstash edgeLog@--> |9200| logElastic
+    edgeLog@{ curve: linear, animate: true, animation: fast }
+
+    adminUser edgeAdmin@-.->|5601| auditContainer
+    edgeAdmin@{ curve: basis, animate: true, animation: fast }
+
+    registryContainer edgeConfig@-.->|5000| auditContainer
+    edgeConfig@{ curve: basis, animate: true, animation: fast }
+
+    microservicesContainer edgeEureka@==>|8761| registryContainer
+    edgeEureka@{ curve: linear, animate: true, animation: fast }
+
+    eventsBus edgeEventsBus@--> msNotifier
+    edgeEventsBus@{ curve: linear, animate: true, animation: fast }
+
+    msNotifier edgeEmailNotify@==> emailServer
+    edgeEmailNotify@{ curve: basis, animate: true, animation: fast }
+
+    msNotifier edgeSmsNotify@==> smsProvider
+    edgeSmsNotify@{ curve: basis, animate: true, animation: fast }
+  end
+
+%% Dark Theme Styling Classes
+classDef zoneClass fill:#0D1117,stroke:#17C9B2,stroke-width:2px,stroke-dasharray:6,rx:40,ry:40;
+classDef containerClass fill:#161B22,stroke:#30363D,stroke-width:2px,rx:25,ry:25;
+classDef coreMicroserviceClass fill:#211F42,stroke:#7C4DFF,stroke-width:2px,color:#FFFFFF;
+classDef supportingMicroserviceClass fill:#132E27,stroke:#00E676,stroke-width:2px,color:#FFFFFF;
+classDef microfrontendClass fill:#332910,stroke:#FFB300,stroke-width:2px,color:#FFFFFF;
+classDef microfrontedEdgeClass stroke:#FFB300,stroke-width:3px;
+classDef systemClass fill:#132E27,stroke:#2ECC71,stroke-width:2px,color:#FFFFFF;
+classDef systemUserClass fill:#1C2D37,stroke:#17C9B2,stroke-width:2px,color:#FFFFFF;
+
+class dmz,nonDmz zoneClass;
+class apiGatewayContainer,microservicesContainer,registryContainer,auditContainer containerClass;
+class msService4,msService5 coreMicroserviceClass;
+class msNotifier,msService3 supportingMicroserviceClass;
+class mfeService1,mfeService2,mfeService3,mfeService4,mfeService5 microfrontendClass;
+class mfeEdgeMfeService1,mfeEdgeMfeService2,mfeEdgeMfeService3,mfeEdgeMfeService4,mfeEdgeMfeService5 microfrontedEdgeClass;
+class database,fileStorage,emailServer,smsProvider,eventsBus systemClass;
+class endUser,systemUser,adminUser systemUserClass;
+
+%% Dark Adhoc Overrides
+style mainContainer fill:#0D1117,stroke:#30363D,stroke-width:2px,rx:20px,ry:20px;
+style srvReactShell fill:#332910,stroke:#FFB300,stroke-width:2px,color:#FFFFFF;
+linkStyle 0,1,2,3,4 stroke:#FFB300, stroke-width:2px;
+style firewall fill:#331A19,stroke:#FF7043,stroke-width:3px,color:#FFFFFF;
+style internet fill:#161B22,stroke:#8B949E,stroke-width:2px,color:#FFFFFF;
+style microservicesContainer stroke-dasharray:8;

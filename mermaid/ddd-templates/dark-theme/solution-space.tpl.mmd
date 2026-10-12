@@ -1,0 +1,142 @@
+---
+config:
+  flowchart:
+    curve: basis
+  theme: base
+  themeVariables:
+    primaryColor: '#1F2937'
+    primaryTextColor: '#FFFFFF'
+    primaryBorderColor: '#374151'
+    lineColor: '#00E5FF'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'Inter, system-ui, sans-serif'
+    mainBkg: '#0D1117'
+    secondBkg: '#161B22'
+    tertiaryColor: '#21262D'
+    clusterBkg: '#161B22'
+    clusterBorder: '#30363D'
+    background: '#0D1117'
+    secondaryColor: '#21262D'
+    tertiaryTextColor: '#FFFFFF'
+    secondaryTextColor: '#FFFFFF'
+    textColor: '#FFFFFF'
+    nodeTextColor: '#FFFFFF'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #8B949E !important; fill: #8B949E !important; }'
+---
+
+flowchart LR
+    endUser@{ shape: sl-rect, label: "👤 End User" }
+    internet@{ shape: cloud, label: "Internet" }
+    firewall@{ shape: rect, label: "🧱 Firewall" }
+    ldap@{ shape: cloud, label: "🪪 LDAP" }
+    usrAdmin@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+    
+    smsProvider@{ shape: rect, label: "📱 SMS Provider" }
+    emailer@{ shape: rect, label: "✉️ Emailer" }
+    serviceBusTop@{ shape: rect, label: "📯 Service Bus (Queues)" }
+
+    subgraph solutionSpace ["Solution Space"]
+        systemUser@{ shape: sl-rect, label: "👤 System User" }
+        
+        subgraph subApiGateway [🌐 API Gateway]
+            srvReactShell@{ shape: rect, label: "⚛️ React Shell" }
+            srvZuul@{ shape: rect, label: "🔀 Zuul / Ribbon" }
+            srvAccessControl@{ shape: rect, label: "🛡 Access Control" }
+        end
+
+        subgraph notificationMicroservice [Notification Microservice]
+            srvNotification@{ shape: hex, label: "🔔 Notification Microservice" }
+        end
+
+        subgraph subRegistry [Registry]
+            srvEureka@{ shape: rect, label: "🧭 Eureka Server" }
+            srvConfig@{ shape: rect, label: "🔧 Config Server" }
+        end
+
+        subgraph subMicroservices ["Microservices (1..n)"]
+            direction TB
+            srvService1Fe@{ shape: rect, label: "🧩 Micro Frontend" }
+            srvService1@{ shape: hex, label: "📦 Microservice 1" }
+            srvService1Fe --- srvService1
+            
+            srvService2Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService2@{ shape: hex, label: "📦 Microservice 2" }
+            srvService2Fe --- srvService2
+            
+            srvService3Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService3@{ shape: hex, label: "📦 Microservice 3" }
+            srvService3Fe --- srvService3
+            
+            srvService4Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService4@{ shape: hex, label: "📦 Microservice 4" }
+            srvService4Fe --- srvService4
+            
+            srvService5Fe@{ shape: rect, label: "🧩 Micro frontend" }
+            srvService5@{ shape: hex, label: "📦 Microservice 5" }
+            srvService5Fe --- srvService5
+        end
+
+        dbOracle@{ shape: cyl, label: "Oracle DB" }
+        stFile@{ shape: lin-doc, label: "🗄️ File Storage" }
+
+        subgraph subAudit [Audit / Log Subsystem]
+            logElastic@{ shape: rect, label: "🔍 ElasticSearch" }
+            logLogstash@{ shape: rect, label: "📥 Logstash" }
+            logKibana@{ shape: rect, label: "📈 Kibana" }
+        end
+    end
+
+    %% External & Gateway Connections
+    endUser --- internet
+    internet --- firewall
+    firewall ==>|443| subApiGateway
+    ldap -.-> srvAccessControl
+    systemUser -->|443| subApiGateway
+
+    %% Notification / External Integrations
+    emailer --> srvNotification
+    smsProvider -.-> srvNotification
+    serviceBusTop -.-> srvNotification
+    srvNotification -.-> serviceBusTop
+
+    srvReactShell -.-> srvService1Fe
+    srvReactShell -.-> srvService2Fe
+    srvReactShell -.-> srvService3Fe
+    srvReactShell -.-> srvService4Fe
+    srvReactShell -.-> srvService5Fe
+
+    subApiGateway ==>|8080...| subMicroservices
+    subApiGateway ==>|8761| subRegistry
+
+    srvService4 ==> dbOracle
+    srvService5 ==> stFile
+
+    subMicroservices ==>|5000| subAudit
+    logLogstash -->|9200| logElastic
+    usrAdmin -.->|5601| subAudit
+    subRegistry -.->|5000| subAudit
+    subMicroservices ==>|8761| subRegistry
+
+    %% Dark Theme Styling Classes
+    classDef containerClass fill:#161B22,stroke:#30363D,stroke-width:2px,rx:25,ry:25,color:#FFFFFF;
+    classDef coreMicroserviceClass fill:#211F42,stroke:#7C4DFF,stroke-width:2px,color:#FFFFFF;
+    classDef supportingMicroserviceClass fill:#132E27,stroke:#00E676,stroke-width:2px,color:#FFFFFF;
+    classDef microfrontendClass fill:#332910,stroke:#FFB300,stroke-width:2px,color:#FFFFFF;
+    classDef systemClass fill:#132E27,stroke:#2ECC71,stroke-width:2px,color:#FFFFFF;
+    classDef systemUserClass fill:#1C2D37,stroke:#17C9B2,stroke-width:2px,color:#FFFFFF;
+    classDef externalClass fill:#21262D,stroke:#8B949E,stroke-width:1px,color:#FFFFFF;
+
+    class subApiGateway,notificationMicroservice,subRegistry,subMicroservices,subAudit containerClass;
+    class srvService1,srvService2,srvService3,srvService4,srvService5 coreMicroserviceClass;
+    class srvNotification supportingMicroserviceClass;
+    class srvService1Fe,srvService2Fe,srvService3Fe,srvService4Fe,srvService5Fe,srvReactShell microfrontendClass;
+    class dbOracle,stFile,serviceBusTop,smsProvider,emailer systemClass;
+    class endUser,systemUser,usrAdmin systemUserClass;
+    class firewall,internet,ldap externalClass;
+
+    %% Adhoc Container Overrides
+    style solutionSpace fill:#0D1117,stroke:#17C9B2,stroke-width:2px,rx:20px,ry:20px;
+    style firewall fill:#331A19,stroke:#FF7043,stroke-width:3px,color:#FFFFFF;
+    style internet fill:#161B22,stroke:#8B949E,stroke-width:2px,color:#FFFFFF;
+    linkStyle 2,17,18 stroke:#FFB300, stroke-width:2px;
+```[cite: 6]

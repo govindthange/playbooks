@@ -1,0 +1,65 @@
+---
+title: "Application Title - DDD: Context Map"
+config:
+  flowchart:
+    curve: basis
+  theme: base
+  themeVariables:
+    primaryColor: '#1F2937'
+    primaryTextColor: '#FFFFFF'
+    primaryBorderColor: '#374151'
+    lineColor: '#00E5FF'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'Inter, system-ui, sans-serif'
+    mainBkg: '#0D1117'
+    secondBkg: '#161B22'
+    tertiaryColor: '#21262D'
+    clusterBkg: '#161B22'
+    clusterBorder: '#30363D'
+    background: '#0D1117'
+    secondaryColor: '#21262D'
+    tertiaryTextColor: '#FFFFFF'
+    secondaryTextColor: '#FFFFFF'
+    textColor: '#FFFFFF'
+    nodeTextColor: '#FFFFFF'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #8B949E !important; fill: #8B949E !important; }'
+---
+
+flowchart TB
+  subgraph mainContainer[" "]
+    direction TB
+        
+    %% Top Node
+    contextC1(["<b>Core Subdomain C1</b><br>Context"])
+
+    %% Middle Layer Nodes
+    contextS1(["<b>Supporting Subdomain S1</b><br>Context"])
+    contextS2(["<b>Supporting Subdomain S2</b><br>Flow Context"])
+    contextS3(["<b>Supporting Subdomain S3</b><br>Context"])
+    contextS4(["<b>Supporting Subdomain S4</b><br>Context"])
+
+    %% Bottom Node
+    contextC2(["<b>Core Subdomain C2</b><br>Context"])
+
+    %% Connections from contextC1
+    contextC1 --- contextS1
+    contextC1 --- contextS2
+    contextC1 --- contextS3
+    contextC1 --- contextS4
+
+    %% Connections to contextC2
+    contextS1 --- contextC2
+    contextS2 --- contextC2
+    contextS3 --- contextC2
+    contextS4 --- contextC2
+  end
+
+  %% Dark Theme Domain Styling Classes
+  classDef coreDomainContextClass fill:#211F42,stroke:#7C4DFF,stroke-dasharray: 4 4,stroke-width:2px,color:#FFFFFF;
+  classDef supportingDomainContextClass fill:#132E27,stroke:#00E676,stroke-dasharray: 4 4,stroke-width:2px,color:#FFFFFF;
+  
+  class contextC1,contextC2 coreDomainContextClass;
+  class contextS1,contextS2,contextS3,contextS4 supportingDomainContextClass;
+
+  %% Subgraph Box Styling
+  style mainContainer fill:#0D1117,stroke:#30363D,stroke-width:2px,rx:20px,ry:20px;
