@@ -26,13 +26,13 @@ config:
 ---
 
 flowchart
-  subgraph subMainContainer[" "]
+  subgraph mainContainer[" "]
     direction TD
     endUser@{ shape: sl-rect, label: "👤 End User" }
     internet@{ shape: cloud, label: "I  N  T  E  R  N  E  T" }
     firewall@{ shape: rect, label: "🧱 Firewall" }
 
-    subgraph subDmz [DMZ]
+    subgraph dmz [DMZ]
         systemUser@{ shape: sl-rect, label: "👤 System User" }
         ldap@{ shape: bow-rect, label: "🪪 LDAP" }
         
@@ -43,7 +43,7 @@ flowchart
         end
     end
 
-    subgraph subNonDmz [Non DMZ]
+    subgraph nonDmz [Non DMZ]
         subgraph registryContainer [Registry]
             direction LR
             srvEureka@{ shape: rect, label: "🧭 Eureka Server" }
@@ -91,7 +91,7 @@ flowchart
     end
 
     %% Keep firewall over apiGatewayContainer
-    %% firewall ~~~ subDmz
+    %% firewall ~~~ dmz
 
     %% Individual animated and styled React Shell connections
     srvReactShell edgeUi1@-.-> mfeService1
@@ -115,7 +115,7 @@ flowchart
     internet edgeFirewall@==> |443| firewall
     edgeFirewall@{ curve: linear, animate: true, animation: slow }
 
-    firewall edgeGateway@==> subDmz
+    firewall edgeGateway@==> dmz
     edgeGateway@{ curve: linear, animate: true, animation: slow }
 
     ldap edgeLdap@-.- srvAccessControl
@@ -178,7 +178,7 @@ classDef microfrontedEdgeClass stroke:#ffb300,stroke-width:3px;
 classDef systemClass fill:#b2dfdb,stroke:#666666,stroke-width:2px;
 classDef systemUserClass fill:#A3E2F0,stroke:#a3d5dc,stroke-width:2px,color:#000000;
 
-class subDmz,subNonDmz zoneClass;
+class dmz,nonDmz zoneClass;
 class apiGatewayContainer,microservicesContainer,registryContainer,auditContainer containerClass;
 class msService4,msService5 coreMicroserviceClass;
 class msNotifier,msService3 supportingMicroserviceClass;
@@ -188,7 +188,7 @@ class database,fileStorage,emailServer,smsProvider,eventsBus systemClass;
 class endUser,systemUser,adminUser systemUserClass;
 
 %% Adhoc styling
-style subMainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
+style mainContainer fill:#f9f9f9,stroke:#666666,stroke-width:1px,rx:30px,ry:30px;
 style srvReactShell fill:#FFFCD1,stroke:#ffb300,stroke-width:3px;
 linkStyle 5,6,7,8,9 stroke:#ffb300, stroke-width:2px;
 style firewall fill:#ffe7d7,stroke:#fab88c,stroke-width:8px;
