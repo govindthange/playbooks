@@ -1,0 +1,160 @@
+---
+title: "Microservices - Tactical Plan w/ Kubernetes"
+config:
+  flowchart:
+    curve: basis
+  theme: base
+  themeVariables:
+    primaryColor: '#1F2937'
+    primaryTextColor: '#FFFFFF'
+    primaryBorderColor: '#374151'
+    lineColor: '#00E5FF'
+    edgeLabelBackground: 'transparent'
+    fontFamily: 'Inter, system-ui, sans-serif'
+    mainBkg: '#0D1117'
+    secondBkg: '#161B22'
+    tertiaryColor: '#21262D'
+    clusterBkg: '#161B22'
+    clusterBorder: '#30363D'
+    background: '#0D1117'
+    secondaryColor: '#21262D'
+    tertiaryTextColor: '#FFFFFF'
+    secondaryTextColor: '#FFFFFF'
+    textColor: '#FFFFFF'
+    nodeTextColor: '#FFFFFF'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: transparent !important; background: transparent !important; fill: transparent !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #8B949E !important; fill: #8B949E !important; }'
+---
+
+flowchart
+  subgraph mainContainer[" "]
+    direction LR
+    endUser@{ shape: sl-rect, label: "👤 End User" }
+    internet@{ shape: cloud, label: "I  N  T  E  R  N  E  T" }
+    firewall@{ shape: rect, label: "🧱 Firewall" }
+
+    subgraph dmz ["DMZ"]
+      onNetWeb1@{ shape: rect, label: "⚛️ On-Net Web App 1" }
+      onNetWeb2@{ shape: rect, label: "⚛️ On-Net Web App 2" }
+      lbBeforeOnnetWebs@{ shape: circle, label: "🔀" }
+    end
+
+    subgraph nonDmz ["Non DMZ / Intranet"]
+      lbBeforeBoApps@{ shape: circle, label: "🔀" }
+      lbBeforeBoWeb@{ shape: circle, label: "🔀" }
+      lbBeforeOnNetApps@{ shape: circle, label: "🔀" }
+      ldap@{ shape: bow-rect, label: "🪪 LDAP" }
+      boWeb1@{ shape: rect, label: "⚛️ Backoffice Web App 1" }
+      boWeb2@{ shape: rect, label: "⚛️ Backoffice Web App 2" }
+      
+      onNetApp1@{ shape: rect, label: "On-Net App 1" }
+      onNetApp2@{ shape: rect, label: "On-Net App 2" }
+
+      lbBeforeOnNetApps edgeLbOnNetApp1@--> onNetApp1
+      edgeLbOnNetApp1@{ curve: basis, animate: true, animation: fast }
+      lbBeforeOnNetApps edgeLbOnNetApp2@--> onNetApp2
+      edgeLbOnNetApp2@{ curve: basis, animate: true, animation: fast }
+
+      adminUser@{ shape: sl-rect, label: "👤 Admin Console (Browser)" }
+      adminUser --> lbBeforeBoWeb
+      lbBeforeBoWeb edgeLbBoWeb1@--> boWeb1
+      edgeLbBoWeb1@{ curve: basis, animate: true, animation: fast }
+      lbBeforeBoWeb edgeLbBoWeb2@--> boWeb2
+      edgeLbBoWeb2@{ curve: basis, animate: true, animation: fast }
+      
+      boWeb1 edgeBoWeb1Lb@--> lbBeforeBoApps
+      edgeBoWeb1Lb@{ curve: basis, animate: true, animation: fast }
+      boWeb2 edgeBoWeb2Lb@--> lbBeforeBoApps
+      edgeBoWeb2Lb@{ curve: basis, animate: true, animation: fast }
+      onNetApp1 edgeService1A2@-.-> lbBeforeBoApps
+      edgeService1A2@{ curve: linear, animate: true, animation: fast }
+
+      onNetApp2 edgeService1B2@-.-> lbBeforeBoApps
+      edgeService1B2@{ curve: linear, animate: true, animation: fast }
+      
+      boApp1@{ shape: rect, label: "Backoffice App 1" }
+      boApp2@{ shape: rect, label: "Backoffice App 2" }
+      lbBeforeBoApps edgeService1A1@-.->|json / https| boApp1
+      edgeService1A1@{ curve: linear, animate: true, animation: fast }
+      lbBeforeBoApps edgeService1B1@-.->|json / https| boApp2
+      edgeService1B1@{ curve: linear, animate: true, animation: fast }
+      subgraph boApp3 ["Backoffice App 3"]
+          boAppScheduler@{ shape: dbl-circ, label: "⚙️ App Scheduler" }
+      end
+      emailServer@{ shape: rect, label: "✉️ Email Server" }
+      database@{ shape: lin-cyl, label: "Database Server" }
+      cbs@{ shape: hex, label: "🏦 Core Banking System" }
+      esb@{ shape: flip-tri, label: "Enterprise<br/>Service<br/>Bus" }
+      smsProvider@{ shape: rect, label: "🔔 SMS Provider" }
+    end
+
+    bse@{ shape: hex, label: "🏦 BSE" }
+    nse@{ shape: hex, label: "🏦 BSE" }
+
+    %% External Access Routing
+    lbBeforeOnnetWebs externalLbToWeb1@--> onNetWeb1
+    externalLbToWeb1@{ curve: basis, animate: true, animation: fast }
+    lbBeforeOnnetWebs externalLbToWeb2@--> onNetWeb2
+    externalLbToWeb2@{ curve: basis, animate: true, animation: fast }
+
+    endUser edgeWeb@--- internet
+    edgeWeb@{ curve: linear }
+
+    internet edgeFirewall@==> |443| firewall
+    edgeFirewall@{ curve: linear, animate: true, animation: slow }
+
+    firewall edgeGateway@==> lbBeforeOnnetWebs
+    edgeGateway@{ curve: linear, animate: true, animation: slow }
+
+    onNetWeb1 webapp1ToInternalLb@==> lbBeforeOnNetApps
+    webapp1ToInternalLb@{ curve: basis, animate: true, animation: slow }
+
+    onNetWeb2 webapp2ToInternalLb@==> lbBeforeOnNetApps
+    webapp2ToInternalLb@{ curve: basis, animate: true, animation: slow }
+
+    boApp1 edgeBoApp1Db@--> database
+    edgeBoApp1Db@{ curve: basis, animate: true, animation: fast }
+    boApp2 edgeBoApp2Db@--> database
+    edgeBoApp2Db@{ curve: basis, animate: true, animation: fast }
+    boApp3 edgeBoApp3Db@--> database
+    edgeBoApp3Db@{ curve: basis, animate: true, animation: fast }
+
+    boAppScheduler edgeEventsBus@--> esb
+    edgeEventsBus@{ curve: linear, animate: true, animation: slow }
+
+    boAppScheduler edgeCbs@--> cbs
+    edgeCbs@{ curve: linear, animate: true, animation: slow }
+
+    boAppScheduler edgeEmailNotify@--> emailServer
+    edgeEmailNotify@{ curve: basis, animate: true, animation: fast }
+
+    boAppScheduler edgeSmsNotify@--> smsProvider
+    edgeSmsNotify@{ curve: basis, animate: true, animation: fast }
+
+    boApp1 & boApp2 -.-> ldap
+
+    esb edgeEsbBse@==> bse
+    edgeEsbBse@{ curve: basis, animate: true, animation: slow }
+
+    esb edgeEsbNse@==> nse
+    edgeEsbNse@{ curve: basis, animate: true, animation: slow }
+  end
+
+%% Dark Theme Styling & Classes
+classDef zoneClass fill:#0D1117,stroke:#17C9B2,stroke-width:2px,stroke-dasharray:6,rx:40,ry:40;
+classDef webAppClass fill:#332910,stroke:#FFB300,stroke-width:2px,color:#FFFFFF;
+classDef onNetClass fill:#102A38,stroke:#00E5FF,stroke-width:2px,color:#FFFFFF;
+classDef boClass fill:#28182D,stroke:#FF4D8D,rx:15,ry:15,color:#FFFFFF;
+classDef serviceClass fill:#132E27,stroke:#2ECC71,stroke-width:2px,color:#FFFFFF;
+classDef systemUserClass fill:#1C2D37,stroke:#17C9B2,stroke-width:2px,color:#FFFFFF;
+
+class dmz,nonDmz zoneClass;
+class onNetWeb1,onNetWeb2,boWeb1,boWeb2 webAppClass;
+class onNetApp1,onNetApp2 onNetClass;
+class boApp1,boApp2,boApp3 boClass;
+class bse,nse,cbs,database serviceClass;
+class endUser,adminUser systemUserClass;
+
+%% Dark Specific Adhoc Styling
+style mainContainer fill:#0D1117,stroke:#30363D,stroke-width:2px,rx:20px,ry:20px;
+style firewall fill:#331A19,stroke:#FF7043,stroke-width:3px,color:#FFFFFF;
+style internet fill:#161B22,stroke:#8B949E,stroke-width:2px,color:#FFFFFF;
