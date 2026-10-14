@@ -35,13 +35,13 @@ flowchart
     subgraph dmz ["DMZ"]
       onNetWeb1@{ shape: rect, label: "⚛️ On-Net Web App 1" }
       onNetWeb2@{ shape: rect, label: "⚛️ On-Net Web App 2" }
-      lbBeforeOnnetWebs@{ shape: circle, label: "🔀" }
+      lbBeforeOnnetWebs@{ shape: cross-circ, label: "🔀" }
     end
 
     subgraph nonDmz ["Non DMZ / Intranet"]
-      lbBeforeBoApps@{ shape: circle, label: "🔀" }
-      lbBeforeBoWeb@{ shape: circle, label: "🔀" }
-      lbBeforeOnNetApps@{ shape: circle, label: "🔀" }
+      lbBeforeBoApps@{ shape: cross-circ, label: "🔀" }
+      lbBeforeBoWeb@{ shape: cross-circ, label: "🔀" }
+      lbBeforeOnNetApps@{ shape: cross-circ, label: "🔀" }
       ldap@{ shape: bow-rect, label: "🪪 LDAP" }
       boWeb1@{ shape: rect, label: "⚛️ Backoffice Web App 1" }
       boWeb2@{ shape: rect, label: "⚛️ Backoffice Web App 2" }
@@ -158,3 +158,8 @@ class endUser,adminUser systemUserClass;
 style mainContainer fill:#0D1117,stroke:#30363D,stroke-width:2px,rx:20px,ry:20px;
 style firewall fill:#331A19,stroke:#FF7043,stroke-width:3px,color:#FFFFFF;
 style internet fill:#161B22,stroke:#8B949E,stroke-width:2px,color:#FFFFFF;
+
+style lbBeforeOnnetWebs stroke:#00E5FF;
+style lbBeforeBoApps stroke:#00E5FF;
+style lbBeforeOnNetApps stroke:#00E5FF;
+style lbBeforeBoWeb stroke:#00E5FF;
