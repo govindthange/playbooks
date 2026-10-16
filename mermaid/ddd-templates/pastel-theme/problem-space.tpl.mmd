@@ -1,0 +1,102 @@
+---
+title: "Application Title - DDD: Problem Space"
+config:
+  flowchart:
+    curve: basis
+  theme: base
+  themeVariables:
+    primaryColor: '#E2F0CB'
+    primaryTextColor: '#1F2937'
+    primaryBorderColor: '#8E9AAF'
+    lineColor: '#4A5568'
+    edgeLabelBackground: '#FFFFFF'
+    fontFamily: 'Inter, system-ui, sans-serif'
+    mainBkg: '#FFFFFF'
+    secondBkg: '#F8FAFC'
+    tertiaryColor: '#EDF2F7'
+    clusterBkg: '#FAFAFA'
+    clusterBorder: '#CBD5E1'
+    background: '#FFFFFF'
+    secondaryColor: '#E2E8F0'
+    tertiaryTextColor: '#1F2937'
+    secondaryTextColor: '#1F2937'
+    textColor: '#1F2937'
+    nodeTextColor: '#1F2937'
+  themeCSS: '.edgeLabel, .edgeLabels, .edgeLabel *, .edgeLabels *, .edgeLabel .label, .edgeLabels .label, .edgeLabel p, .edgeLabels p, .edgeLabel div, .edgeLabels div, .edgeLabel foreignObject, .edgeLabels foreignObject, .edgeLabel rect, .edgeLabels rect, .edgeLabel span, .edgeLabels span, .label rect, tspan { background-color: #FFFFFF !important; fill: #FFFFFF !important; stroke: none !important; } .edgeLabel .label text, .edgeLabel text, .edgeLabels text, .edgeLabel p, .edgeLabels p, .edgeLabel span, .edgeLabels span { color: #4A5568 !important; fill: #4A5568 !important; }'
+---
+
+flowchart
+    subgraph mainContainer[" "]
+        direction LR
+        
+        %% Core Domain
+        subgraph coreDomain["Core Domain"]
+            direction LR
+            
+            subgraph coreSubdomain1["Subdomain #1"]
+                direction TB
+                coreSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
+                coreSubdomain1Aspect2(["Subdomain 1, Aspect 2"])
+                coreSubdomain1Aspect3(["Subdomain 1, Aspect 3"])
+                coreSubdomain1Aspect4(["Subdomain 1, Aspect 4"])
+            end
+            
+            subgraph coreSubdomain2["Subdomain #2"]
+                coreSubdomain2Aspect1(["Subdomain 2, Aspect 1"])
+            end
+            
+            subgraph coreSubdomain3["Subdomain #3"]
+                coreSubdomain3Aspect1(["Subdomain 3, Aspect 1"])
+                coreSubdomain3Aspect2(["Subdomain 3, Aspect 2"])
+            end
+            
+        end
+        
+        %% Generic Domain
+        subgraph genericDomain["Generic Domain"]
+            direction LR
+            genericAuthNZ(["❶ Role Based Security<br>(AuthN / AuthZ)"])
+            genericHealthMonitoring(["❶ Health/Monitoring"])
+            genericAuditLogs(["❶ Audit/Logs"])
+            genericNotifications(["❶ Notifications"])
+        end
+        
+        %% Supporting Domain
+        subgraph supportingDomain["Supporting Domain"]
+            direction LR
+            
+            subgraph supportingSubdomain1["Subdomain #1"]
+                supportingSubdomain1Aspect1(["Subdomain 1, Aspect 1"])
+                supportingSubdomain1Aspect2(["Subdomain 1, Aspect 2"])
+            end
+            
+            subgraph supportingSubdomain2["Subdomain #2"]
+                supportingSubdomain2Aspect1(["Subdomain 2, Aspect 1"])
+                supportingSubdomain2Aspect2(["Subdomain 2, Aspect 2"])
+                supportingSubdomain2Aspect3(["Subdomain 2, Aspect 3"])
+            end
+            
+            subgraph supportingSubdomain3["Subdomain #3"]
+                supportingSubdomain3Aspect1(["Subdomain 3, Aspect 1"])
+                supportingSubdomain3Aspect2(["Subdomain 3, Aspect 2"])
+                supportingSubdomain3Aspect3(["Subdomain 3, Aspect 3"])
+                supportingSubdomain3Aspect4(["Subdomain 3, Aspect 4"])
+            end
+            
+        end
+
+    end
+
+    %% Pastel Light Theme Problem Space Styling Classes
+    classDef subdomainClass fill:#F1F5F9,stroke:#94A3B8,stroke-dasharray: 5 5,rx:100,ry:50,color:#1F2937;
+    classDef coreDomainClass fill:#E1BEE7,stroke:#9C27B0,stroke-width:2px,rx:120,ry:60,color:#1F2937;
+    classDef supportingDomainClass fill:#C8E6C9,stroke:#4CAF50,stroke-width:2px,rx:150,ry:80,color:#1F2937;
+    classDef genericDomainClass fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px,rx:120,ry:60,color:#1F2937;
+    
+    class coreDomain,genericDomain,supportingDomain subdomainClass;
+    class coreSubdomain1,coreSubdomain2,coreSubdomain3 coreDomainClass;
+    class supportingSubdomain1,supportingSubdomain2,supportingSubdomain3 supportingDomainClass;
+    class genericAuthNZ,genericHealthMonitoring,genericAuditLogs,genericNotifications genericDomainClass;
+
+    %% Subgraph Box Container Styling
+    style mainContainer fill:#FFFFFF,stroke:#CBD5E1,stroke-width:2px,rx:20px,ry:20px;
