@@ -82,13 +82,13 @@ flowchart
       end
       emailServer@{ shape: rect, label: "✉️ Email Server" }
       database@{ shape: lin-cyl, label: "Database Server" }
-      cbs@{ shape: hex, label: "🏦 Core Banking System" }
+      internalSystem1@{ shape: hex, label: "🏦 Internal System 1" }
       esb@{ shape: flip-tri, label: "Enterprise<br/>Service<br/>Bus" }
       smsProvider@{ shape: rect, label: "🔔 SMS Provider" }
     end
 
-    bse@{ shape: hex, label: "🏦 BSE" }
-    nse@{ shape: hex, label: "🏦 BSE" }
+    externalSystem1@{ shape: hex, label: "🏦 External System 1" }
+    externalSystem2@{ shape: hex, label: "🏦 External System 2" }
 
     %% External Access Routing
     lbBeforeOnnetWebs externalLbToWeb1@--> onNetWeb1
@@ -121,7 +121,7 @@ flowchart
     boAppScheduler edgeEventsBus@--> esb
     edgeEventsBus@{ curve: linear, animate: true, animation: slow }
 
-    boAppScheduler edgeCbs@--> cbs
+    boAppScheduler edgeCbs@--> internalSystem1
     edgeCbs@{ curve: linear, animate: true, animation: slow }
 
     boAppScheduler edgeEmailNotify@--> emailServer
@@ -132,10 +132,10 @@ flowchart
 
     boApp1 & boApp2 -.-> ldap
 
-    esb edgeEsbBse@==> bse
+    esb edgeEsbBse@==> externalSystem1
     edgeEsbBse@{ curve: basis, animate: true, animation: slow }
 
-    esb edgeEsbNse@==> nse
+    esb edgeEsbNse@==> externalSystem2
     edgeEsbNse@{ curve: basis, animate: true, animation: slow }
   end
 
@@ -151,7 +151,7 @@ class dmz,nonDmz zoneClass;
 class onNetWeb1,onNetWeb2,boWeb1,boWeb2 webAppClass;
 class onNetApp1,onNetApp2 onNetClass;
 class boApp1,boApp2,boApp3 boClass;
-class bse,nse,cbs,database serviceClass;
+class database,internalSystem1,externalSystem1,externalSystem2 serviceClass;
 class endUser,adminUser systemUserClass;
 
 %% Pastel Specific Adhoc Styling
